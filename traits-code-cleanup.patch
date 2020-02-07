@@ -1,0 +1,4805 @@
+diff --git GameSettings.cpp GameSettings.cpp
+index afc10eb5..d4281d60 100644
+--- GameSettings.cpp
++++ GameSettings.cpp
+@@ -2292,10 +2292,10 @@ void LoadSkillTraitsExternalSettings()
+ {
+ 	CIniReader iniReader(STOMP_SETTINGS_FILE);
+ 
+-	gSkillTraitValues.ubMaxNumberOfTraits = iniReader.ReadInteger("Generic Traits Settings","MAX_NUMBER_OF_TRAITS", 5, 2, 30);
++	gSkillTraitValues.ubMaxNumberOfTraits = iniReader.ReadInteger("Generic Traits Settings","MAX_NUMBER_OF_TRAITS", 5, 2, MAX_NUM_TRAITS);
+ 	gSkillTraitValues.ubNumberOfMajorTraitsAllowed = iniReader.ReadInteger( "Generic Traits Settings", "NUMBER_OF_MAJOR_TRAITS_ALLOWED", 3, 2, gSkillTraitValues.ubMaxNumberOfTraits - 1);
+ 
+-	gSkillTraitValues.ubMaxNumberOfTraitsForIMP = iniReader.ReadInteger("Generic Traits Settings","MAX_NUMBER_OF_TRAITS_FOR_IMP", 3, 2, 30);
++	gSkillTraitValues.ubMaxNumberOfTraitsForIMP = iniReader.ReadInteger("Generic Traits Settings","MAX_NUMBER_OF_TRAITS_FOR_IMP", 3, 2, MAX_NUM_TRAITS);
+ 	gSkillTraitValues.ubNumberOfMajorTraitsAllowedForIMP = iniReader.ReadInteger( "Generic Traits Settings", "NUMBER_OF_MAJOR_TRAITS_ALLOWED_FOR_IMP", 2, 2, min( gSkillTraitValues.ubNumberOfMajorTraitsAllowed, gSkillTraitValues.ubMaxNumberOfTraitsForIMP - 1 ) );
+ 
+ 	// Allow an exception in number of traits for Special Merc?
+@@ -2372,8 +2372,8 @@ void LoadSkillTraitsExternalSettings()
+ 	gSkillTraitValues.ubSNDamageBonusFromNumClicks = iniReader.ReadInteger("Sniper","GUN_DAMAGE_BONUS_FROM_NUM_CLICKS", 4, 0, 8);
+ 	gSkillTraitValues.ubSNChamberRoundAPsReduction = iniReader.ReadInteger("Sniper","CHAMBER_ROUND_APS_REDUCTION", 25, 0, 45);
+ 	gSkillTraitValues.ubSNAimClicksAdded = iniReader.ReadInteger("Sniper","POSSIBLE_AIM_CLICK_ADDED_RIFLES", 1, 0, 3);
+-	gSkillTraitValues.ubSNFocusRadius = iniReader.ReadInteger( "Sniper", "FOCUS_SKILL_RADIUS", 5, 1, 30 );
+-	gSkillTraitValues.sSNFocusInterruptBonus = iniReader.ReadInteger( "Sniper", "FOCUS_SKILL_INTERRUPT_BONUS", 2, 1, 10 );
++	gSkillTraitValues.ubSNFocusRadius = iniReader.ReadInteger("Sniper","FOCUS_SKILL_RADIUS", 5, 1, 30);
++	gSkillTraitValues.sSNFocusInterruptBonus = iniReader.ReadInteger("Sniper","FOCUS_SKILL_INTERRUPT_BONUS", 2, 1, 10);
+ 
+ 	// RANGER
+ 	gSkillTraitValues.ubRABonusCtHRifles = iniReader.ReadInteger("Ranger","BONUS_CTH_RIFLES", 5, 0, 100);
+diff --git Laptop/AimMembers.cpp Laptop/AimMembers.cpp
+index 93db0671..97dfa4b6 100644
+--- Laptop/AimMembers.cpp
++++ Laptop/AimMembers.cpp
+@@ -5410,8 +5410,6 @@ void DisplayPopUpBoxExplainingMercArrivalLocationAndTimeCallBack( UINT8 bExitVal
+ 
+ void DisplayAimMemberClickOnFaceHelpText()
+ {
+-	CHAR16 sString[ 128 ], sTemp[ 20 ];
+-
+ 	if(gGameExternalOptions.gfUseNewStartingGearInterface)
+ 	{
+ 		//display the 'left click' onscreen help msg a bit to the right
+@@ -5431,75 +5429,12 @@ void DisplayAimMemberClickOnFaceHelpText()
+ 	// Buggler: skills/traits tooltip on merc portrait
+ 	if( gGameExternalOptions.fShowSkillsInHirePage == TRUE )
+ 	{
+-		// clear string value
+-		swprintf( sString, L"");
+-
+-		if (gGameOptions.fNewTraitSystem) // SANDRO - old/new traits check
+-		{
+-			UINT8 ubTempSkillArray[30];
+-			INT8 bNumSkillTraits = 0;
++		CHAR16 sString[128];
+ 
+-			// lets rearrange our skills to a temp array
+-			// we also get the number of lines (skills) to be displayed 
+-			for ( UINT8 ubCnt = 1; ubCnt < NUM_SKILLTRAITS_NT; ubCnt++ )
+-			{
+-				if ( ProfileHasSkillTrait( gbCurrentSoldier, ubCnt ) == 2 )
+-				{
+-					ubTempSkillArray[bNumSkillTraits] = (ubCnt + NEWTRAIT_MERCSKILL_EXPERTOFFSET);
+-					bNumSkillTraits++;
+-				}
+-				else if ( ProfileHasSkillTrait( gbCurrentSoldier, ubCnt ) == 1 )
+-				{
+-					ubTempSkillArray[bNumSkillTraits] = ubCnt;
+-					bNumSkillTraits++;
+-				}
+-			}
++		// clear string value
++		swprintf( sString, L"" );
+ 
+-			if ( bNumSkillTraits == 0 )
+-			{
+-				swprintf( sString, L"%s", pPersonnelScreenStrings[ PRSNL_TXT_NOSKILLS ] );
+-			}
+-			else
+-			{
+-				for ( UINT8 ubCnt = 0; ubCnt < bNumSkillTraits; ubCnt++ )
+-				{
+-					swprintf( sTemp, L"%s\n", gzMercSkillTextNew[ ubTempSkillArray[ubCnt] ] );
+-					wcscat( sString, sTemp );
+-				}
+-			}
+-		}
+-		else
+-		{
+-			INT8 bSkill1 = 0, bSkill2 = 0; 	
+-			bSkill1 = gMercProfiles[ gbCurrentSoldier ].bSkillTraits[0];
+-			bSkill2 = gMercProfiles[ gbCurrentSoldier ].bSkillTraits[1];
+-
+-			if ( bSkill1 == 0 && bSkill2 == 0 )
+-			{
+-				swprintf( sString, L"%s", pPersonnelScreenStrings[ PRSNL_TXT_NOSKILLS ] );
+-			}
+-			else
+-			{
+-				//if the 2 skills are the same, add the '(expert)' at the end
+-				if( bSkill1 == bSkill2 )
+-				{
+-					swprintf( sString, L"%s %s", gzMercSkillText[bSkill1], gzMercSkillText[EXPERT] );
+-				}
+-				else
+-				{
+-					//Display the first skill
+-					if( bSkill1 != 0 )
+-					{
+-						swprintf( sString, L"%s\n", gzMercSkillText[bSkill1] );
+-					}
+-					if( bSkill2 != 0 )
+-					{
+-						swprintf( sTemp, L"%s", gzMercSkillText[bSkill2] );
+-						wcscat( sString, sTemp );
+-					}
+-				}
+-			}
+-		}
++		gMercProfiles[gbCurrentSoldier].traits.FillHelpText( sString );
+ 		SetRegionFastHelpText( &gSelectedFaceRegion, sString );
+ 	}
+ }
+diff --git Laptop/IMP Confirm.cpp Laptop/IMP Confirm.cpp
+index 2509f738..0ab8fdbc 100644
+--- Laptop/IMP Confirm.cpp	
++++ Laptop/IMP Confirm.cpp	
+@@ -61,7 +61,9 @@ typedef struct
+ }	INVNODE;
+ 
+ IMP_ITEM_CHOICE_TYPE gIMPItemChoices[MAX_IMP_ITEM_TYPES];
+-	
++
++void GiveIMPRandomItemsForNewSkillTrait( MERCPROFILESTRUCT* pProfile, NTrait skillTrait, UINT8 normalTypeIndex, UINT8 expertTypeIndex = 0 );
++void GiveIMPRandomItemsForOldSkillTrait( MERCPROFILESTRUCT* pProfile, OTrait skillTrait, UINT8 normalTypeIndex, UINT8 expertTypeIndex = 0 );
+ void GiveIMPRandomItems( MERCPROFILESTRUCT *pProfile, UINT8 typeIndex );
+ void GiveIMPItems( MERCPROFILESTRUCT *pProfile, INT8 abilityValue, UINT8 typeIndex );
+ 
+@@ -444,11 +446,6 @@ void BtnIMPConfirmNo( GUI_BUTTON *btn,INT32 reason )
+ }
+ */
+ 
+-// SANDRO - improved this function
+-//#define PROFILE_HAS_SKILL_TRAIT( p, t ) ( gGameOptions.fNewTraitSystem ? ((p->bSkillTrait == t) || (p->bSkillTrait2 == t) || (p->bSkillTrait3 == t)) : ((p->bSkillTrait == t) || (p->bSkillTrait2 == t)))
+-#define PROFILE_HAS_SKILL_TRAIT( p, t ) ( ProfileHasSkillTrait( p, t ) > 0 )
+-// DBrot: need a check for experts
+-#define PROFILE_HAS_EXPERT_TRAIT( p, t ) ( ProfileHasSkillTrait( p, t ) > 1 )
+ //CHRISL: New function to handle proper distribution of starting gear
+ void DistributeInitialGear(MERCPROFILESTRUCT *pProfile)
+ {
+@@ -637,319 +634,179 @@ void GiveItemsToPC( UINT8 ubProfileId )
+ 		if ( gGameOptions.fNewTraitSystem )
+ 		{
+ 			// MAJOR TRAITS
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, AUTO_WEAPONS_NT))
+-			{	
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, AUTO_WEAPONS_NT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_AUTO_WEAPONS_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_AUTO_WEAPONS);
+-				}
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, HEAVY_WEAPONS_NT ))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, HEAVY_WEAPONS_NT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_HEAVY_WEAPONS_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_HEAVY_WEAPONS);
+-				}
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, SNIPER_NT))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, SNIPER_NT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_SNIPER_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_SNIPER);
+-				}
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, RANGER_NT))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, RANGER_NT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_RANGER_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_RANGER);
+-				}
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, GUNSLINGER_NT))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, GUNSLINGER_NT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_GUNSLINGER_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_GUNSLINGER);
+-				}		
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, MARTIAL_ARTS_NT))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, MARTIAL_ARTS_NT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_MARTIAL_ARTS_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_MARTIAL_ARTS);
+-				}
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, SQUADLEADER_NT))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, SQUADLEADER_NT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_SQUADLEADER_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_SQUADLEADER);
+-				}
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, TECHNICIAN_NT) && ( iMechanical ) )
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, TECHNICIAN_NT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_TECHNICIAN_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_TECHNICIAN);
+-				}
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, DOCTOR_NT ))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, DOCTOR_NT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_DOCTOR_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_DOCTOR);
+-				}
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, COVERT_NT))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, COVERT_NT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_COVERT_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_COVERT);
+-				}
+-			}
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				AUTO_WEAPONS_NT,
++				IMP_AUTO_WEAPONS,
++				IMP_AUTO_WEAPONS_EXP
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				SNIPER_NT,
++				IMP_SNIPER,
++				IMP_SNIPER_EXP
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				RANGER_NT,
++				IMP_RANGER,
++				IMP_RANGER_EXP
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				AUTO_WEAPONS_NT,
++				IMP_AUTO_WEAPONS,
++				IMP_AUTO_WEAPONS_EXP
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				GUNSLINGER_NT,
++				IMP_GUNSLINGER,
++				IMP_GUNSLINGER_EXP
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				MARTIAL_ARTS_NT,
++				IMP_MARTIAL_ARTS,
++				IMP_MARTIAL_ARTS_EXP
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				SQUADLEADER_NT,
++				IMP_SQUADLEADER,
++				IMP_SQUADLEADER_EXP
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				TECHNICIAN_NT,
++				IMP_TECHNICIAN,
++				IMP_TECHNICIAN_EXP
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				DOCTOR_NT,
++				IMP_DOCTOR,
++				IMP_DOCTOR_EXP
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				COVERT_NT,
++				IMP_COVERT,
++				IMP_COVERT_EXP
++			);
++
+ 			// MINOR TRAITS
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, AMBIDEXTROUS_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_AMBIDEXTROUS);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, MELEE_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_MELEE);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, THROWING_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_THROWING);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, NIGHT_OPS_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_NIGHT_OPS);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, STEALTHY_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_STEALTHY);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, ATHLETICS_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_ATHLETICS);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, BODYBUILDING_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_BODYBUILDING);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, DEMOLITIONS_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_DEMOLITIONS);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, TEACHING_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_TEACHING);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, SCOUTING_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_SCOUTING);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, RADIO_OPERATOR_NT))
+-			{
+-				GiveIMPRandomItems(pProfile,IMP_RADIO_OPERATOR);
+-			}
+-			if ( PROFILE_HAS_SKILL_TRAIT( ubProfileId, SURVIVAL_NT ) )
+-			{
+-				GiveIMPRandomItems( pProfile, IMP_SURVIVAL );
+-			}
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				AMBIDEXTROUS_NT,
++				IMP_AMBIDEXTROUS
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				MELEE_NT,
++				IMP_MELEE
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				THROWING_NT,
++				IMP_THROWING
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				NIGHT_OPS_NT,
++				IMP_NIGHT_OPS
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				STEALTHY_NT,
++				IMP_STEALTHY
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				ATHLETICS_NT,
++				IMP_ATHLETICS
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				BODYBUILDING_NT,
++				IMP_BODYBUILDING
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				DEMOLITIONS_NT,
++				IMP_DEMOLITIONS
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				TEACHING_NT,
++				IMP_TEACHING
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				SCOUTING_NT,
++				IMP_SCOUTING
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				RADIO_OPERATOR_NT,
++				IMP_RADIO_OPERATOR
++			);
++			GiveIMPRandomItemsForNewSkillTrait( pProfile,
++				SURVIVAL_NT,
++				IMP_SURVIVAL
++			);
+ 		}
+ 		else
+ 		{
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, LOCKPICKING_OT) && ( iMechanical ) )
+-			{
+-				//MakeProfileInvItemAnySlot(pProfile, LOCKSMITHKIT, 100, 1);
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, LOCKPICKING_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_LOCKPICKING_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_LOCKPICKING);
+-				}
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, ELECTRONICS_OT) && ( iMechanical ) )
+-			{
+-				//MakeProfileInvItemAnySlot(pProfile, METALDETECTOR, 100, 1);
+-				GiveIMPRandomItems(pProfile,IMP_ELECTRONICS);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, CAMOUFLAGED_OT)) // TODO: Madd - other camouflage types, once we figure out a way to enable more traits
+-			{
+-				//MakeProfileInvItemAnySlot(pProfile, CAMOUFLAGEKIT, 100, 1);
+-				GiveIMPRandomItems(pProfile,IMP_CAMOUFLAGED);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, AMBIDEXT_OT))
+-			{
+-				//MakeProfileInvItemAnySlot(pProfile, M950, 100, 1);
+-				GiveIMPRandomItems(pProfile,IMP_AMBIDEXTROUS);
+-			}
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, NIGHTOPS_OT))
+-			{
+-	//			MakeProfileInvItemAnySlot(pProfile, SILENCER, 100, 2);
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, NIGHTOPS_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_NIGHT_OPS_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_NIGHT_OPS);
+-				}
+-			}
+-		
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, HANDTOHAND_OT))
+-			{
+-				//MakeProfileInvItemAnySlot(pProfile, BRASS_KNUCKLES, 100, 1);
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, HANDTOHAND_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_MARTIAL_ARTS_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_MARTIAL_ARTS);
+-				}
+-			}
+-
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, THROWING_OT))
+-			{
+-	//			MakeProfileInvItemAnySlot(pProfile, THROWING_KNIFE, 100, 1);
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, THROWING_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_THROWING_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_THROWING);
+-				}
+-			}
+-
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, STEALTHY_OT))
+-			{
+-	//			MakeProfileInvItemAnySlot(pProfile, SILENCER, 100, 1);
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, STEALTHY_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_STEALTHY_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_STEALTHY);
+-				}
+-			}
+-
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, KNIFING_OT))
++			if ( iMechanical )
+ 			{
+-	//			MakeProfileInvItemAnySlot(pProfile, COMBAT_KNIFE, 100, 1);
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, KNIFING_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_MELEE_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_MELEE);
+-				}
+-			}
+-
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, MARTIALARTS_OT))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, MARTIALARTS_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_MARTIAL_ARTS_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_MARTIAL_ARTS);
+-				}
+-			}
+-
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, PROF_SNIPER_OT))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, PROF_SNIPER_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_SNIPER_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_SNIPER);
+-				}
+-			}
+-
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, TEACHING_OT))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, TEACHING_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_TEACHING_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_TEACHING);
+-				}
+-			}
+-
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, AUTO_WEAPS_OT))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, AUTO_WEAPS_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_AUTO_WEAPONS_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_AUTO_WEAPONS);
+-				}
+-			}
+-
+-			if (PROFILE_HAS_SKILL_TRAIT(ubProfileId, HEAVY_WEAPS_OT ))
+-			{
+-				if( gGameExternalOptions.fExpertsGetDifferentChoices && PROFILE_HAS_EXPERT_TRAIT(ubProfileId, HEAVY_WEAPS_OT))
+-				{
+- 					GiveIMPRandomItems(pProfile,IMP_HEAVY_WEAPONS_EXP);
+-				}
+-				else
+-				{
+-					GiveIMPRandomItems(pProfile, IMP_HEAVY_WEAPONS);
+-				}
++				GiveIMPRandomItemsForOldSkillTrait( pProfile,
++					LOCKPICKING_OT,
++					IMP_LOCKPICKING,
++					IMP_LOCKPICKING_EXP
++				);
++				GiveIMPRandomItemsForOldSkillTrait( pProfile,
++					ELECTRONICS_OT,
++					IMP_ELECTRONICS
++				);
+ 			}
++			GiveIMPRandomItemsForOldSkillTrait( pProfile, // TODO: Madd - other camouflage types, once we figure out a way to enable more traits
++				CAMOUFLAGED_OT,
++				IMP_CAMOUFLAGED
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				AMBIDEXT_OT,
++				IMP_AMBIDEXTROUS
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				NIGHTOPS_OT,
++				IMP_NIGHT_OPS,
++				IMP_NIGHT_OPS_EXP
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				HANDTOHAND_OT,
++				IMP_MARTIAL_ARTS,
++				IMP_MARTIAL_ARTS_EXP
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				THROWING_OT,
++				IMP_THROWING,
++				IMP_THROWING_EXP
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				STEALTHY_OT,
++				IMP_STEALTHY,
++				IMP_STEALTHY_EXP
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				KNIFING_OT,
++				IMP_MELEE,
++				IMP_MELEE_EXP
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				MARTIALARTS_OT,
++				IMP_MARTIAL_ARTS,
++				IMP_MARTIAL_ARTS_EXP
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				PROF_SNIPER_OT,
++				IMP_SNIPER,
++				IMP_SNIPER_EXP
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				TEACHING_OT,
++				IMP_TEACHING,
++				IMP_TEACHING_EXP
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				AUTO_WEAPS_OT,
++				IMP_AUTO_WEAPONS,
++				IMP_AUTO_WEAPONS_EXP
++			);
++			GiveIMPRandomItemsForOldSkillTrait( pProfile,
++				HEAVY_WEAPS_OT,
++				IMP_HEAVY_WEAPONS,
++				IMP_HEAVY_WEAPONS_EXP
++			);
+ 		}
+ 		/////////////////////////////////////////////////////////////////////
+ 	}
+@@ -1640,6 +1497,29 @@ void ResetIMPCharactersEyesAndMouthOffsets( UINT8 ubMercProfileID )
+ 	gMercProfiles[ubMercProfileID].usMouthY = gIMPValues[gMercProfiles[ubMercProfileID].ubFaceIndex].uiMouthYPositions;
+ }
+ 
++void GiveIMPRandomItemsForSkillLevel( MERCPROFILESTRUCT* pProfile, INT8 skillLevel, UINT8 normalTypeIndex, UINT8 expertTypeIndex )
++{
++	if ( expertTypeIndex > 0 && gGameExternalOptions.fExpertsGetDifferentChoices && skillLevel >= 2 )
++	{
++		GiveIMPRandomItems( pProfile, expertTypeIndex );
++	}
++	else if ( skillLevel >= 1 )
++	{
++		GiveIMPRandomItems( pProfile, normalTypeIndex );
++	}
++}
++
++void GiveIMPRandomItemsForNewSkillTrait( MERCPROFILESTRUCT* pProfile, NTrait skillTrait, UINT8 normalTypeIndex, UINT8 expertTypeIndex )
++{
++	INT8 skillLevel = pProfile->traits.ProfileNTraitLevel( skillTrait );
++	GiveIMPRandomItemsForSkillLevel( pProfile, skillLevel, normalTypeIndex, expertTypeIndex );
++}
++
++void GiveIMPRandomItemsForOldSkillTrait( MERCPROFILESTRUCT* pProfile, OTrait skillTrait, UINT8 normalTypeIndex, UINT8 expertTypeIndex )
++{
++	INT8 skillLevel = pProfile->traits.ProfileOTraitLevel( skillTrait );
++	GiveIMPRandomItemsForSkillLevel( pProfile, skillLevel, normalTypeIndex, expertTypeIndex );
++}
+ 
+ void GiveIMPRandomItems( MERCPROFILESTRUCT *pProfile, UINT8 typeIndex )
+ {
+diff --git Laptop/IMP Skill Trait.cpp Laptop/IMP Skill Trait.cpp
+index 56b1f6e1..30dfea36 100644
+--- Laptop/IMP Skill Trait.cpp	
++++ Laptop/IMP Skill Trait.cpp	
+@@ -521,7 +521,7 @@ void HandleIMPSkillTraitAnswers( UINT32 uiSkillPressed, BOOLEAN fSecondTrait )
+ 			}
+ 		}
+ 		// if cannot have expert level of skill, don't continue
+-		else if ( gfSkillTraitQuestions2[uiSkillPressed] && !TwoStagedTrait( gGameOptions.fNewTraitSystem ? gusNewMajorTraitRemap[uiSkillPressed] : uiSkillPressed ) )
++		else if ( gfSkillTraitQuestions2[uiSkillPressed] && !( gGameOptions.fNewTraitSystem ? HasMajorNTrait( (NTrait)gusNewMajorTraitRemap[uiSkillPressed] ) : TwoStagedOldImpTrait( uiSkillPressed ) ) )
+ 		{
+ 			//dont need to do anything
+ 			return;
+@@ -635,7 +635,7 @@ void HandleIMPSkillTraitAnswers( UINT32 uiSkillPressed, BOOLEAN fSecondTrait )
+ 			}
+ 		}
+ 		// if cannot have expert level of skill, don't continue
+-		else if ( gfSkillTraitQuestions[uiSkillPressed] && !TwoStagedTrait( gGameOptions.fNewTraitSystem ? gusNewMajorTraitRemap[uiSkillPressed] : uiSkillPressed ) )
++		else if ( gfSkillTraitQuestions[uiSkillPressed] && !( gGameOptions.fNewTraitSystem ? HasMajorNTrait( (NTrait)gusNewMajorTraitRemap[uiSkillPressed]) : TwoStagedOldImpTrait(uiSkillPressed) ) )
+ 		{
+ 			//dont need to do anything
+ 			return;
+diff --git Laptop/email.cpp Laptop/email.cpp
+index 698d1035..6101dd94 100644
+--- Laptop/email.cpp
++++ Laptop/email.cpp
+@@ -4454,138 +4454,139 @@ void HandleIMPCharProfileResultsMessage( void)
+ 			iCounter++;
+ 		}
+ 
++	MERCPROFILESTRUCT* pProfile = &gMercProfiles[iCurrentIMPSlot];
+ 	///////////////////////////////////////////////////////////////////////////////
+ 	// SANDRO - switch for old/new traits
+ 	if ( gGameOptions.fNewTraitSystem )
+ 	{
+ 		// Auto Weapons
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, AUTO_WEAPONS_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( AUTO_WEAPONS_NT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_AUTO ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Heavy Weapons
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, HEAVY_WEAPONS_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( HEAVY_WEAPONS_NT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_HEAVY ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Sniper
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, SNIPER_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( SNIPER_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[0]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Ranger
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, RANGER_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( RANGER_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[2]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Gunslinger
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, GUNSLINGER_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( GUNSLINGER_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[3]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Martial Artist
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, MARTIAL_ARTS_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( MARTIAL_ARTS_NT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_MARTIAL ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Squadleader
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, SQUADLEADER_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( SQUADLEADER_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[4]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Technician
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, TECHNICIAN_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( TECHNICIAN_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[5]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Doctor
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, DOCTOR_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( DOCTOR_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[6]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Ambidextrous
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, AMBIDEXTROUS_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( AMBIDEXTROUS_NT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_AMBI ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Melee
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, MELEE_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( MELEE_NT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_KNIFE ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Throwing
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, THROWING_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( THROWING_NT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_THROW ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Night Ops
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, NIGHT_OPS_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( NIGHT_OPS_NT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_NIGHT ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Stealthy
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, STEALTHY_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( STEALTHY_NT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_STEALTH ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Athletics
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, ATHLETICS_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( ATHLETICS_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[7]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Bodybuilding
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, BODYBUILDING_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( BODYBUILDING_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[8]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Demolitions
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, DEMOLITIONS_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( DEMOLITIONS_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[9]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Teaching
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, TEACHING_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( TEACHING_NT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_TEACH ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Scouting
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, SCOUTING_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( SCOUTING_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[10]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Covert ops
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, COVERT_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( COVERT_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[11]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Radio Operator
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, RADIO_OPERATOR_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( RADIO_OPERATOR_NT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[12]);
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Survival
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, SURVIVAL_NT ) > 0 )
++		if ( pProfile->traits.ProfileNTraitLevel( SURVIVAL_NT ) > 0 )
+ 		{
+ 			wcscpy( pString, MissingIMPSkillsDescriptions[13] );
+ 			AddEmailRecordToList( pString );
+@@ -4594,61 +4595,61 @@ void HandleIMPCharProfileResultsMessage( void)
+ 	else
+ 	{
+ 		// Lockpick
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, LOCKPICKING_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( LOCKPICKING_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_LOCK ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Hand to Hand
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, HANDTOHAND_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( HANDTOHAND_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_HAND ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Electronics
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, ELECTRONICS_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( ELECTRONICS_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_ELEC ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Night Ops
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, NIGHTOPS_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( NIGHTOPS_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_NIGHT ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Throwing
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, THROWING_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( THROWING_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_THROW ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Teaching
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, TEACHING_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( TEACHING_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_TEACH ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Heavy Weapons
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, HEAVY_WEAPS_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( HEAVY_WEAPS_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_HEAVY ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Auto Weapons
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, AUTO_WEAPS_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( AUTO_WEAPS_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_AUTO ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Stealthy
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, STEALTHY_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( STEALTHY_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_STEALTH ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Ambidextrous
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, AMBIDEXT_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( AMBIDEXT_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_AMBI ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+@@ -4660,26 +4661,26 @@ void HandleIMPCharProfileResultsMessage( void)
+ 			AddEmailRecordToList( pString );
+ 		}*/
+ 		// Martial Arts
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, MARTIALARTS_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( MARTIALARTS_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_MARTIAL ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Knifing
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, KNIFING_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( KNIFING_OT ) > 0 )
+ 		{
+ 			LoadEncryptedDataFromFile( "BINARYDATA\\Impass.edt", pString, MAIL_STRING_SIZE * ( IMP_SKILLS_SPECIAL_KNIFE ), MAIL_STRING_SIZE );
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Sniper
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, PROF_SNIPER_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( PROF_SNIPER_OT ) > 0 )
+ 		{
+ 			wcscpy(pString, MissingIMPSkillsDescriptions[0]);
+ 			// add to list
+ 			AddEmailRecordToList( pString );
+ 		}
+ 		// Camouflage
+-		if ( ProfileHasSkillTrait( iCurrentIMPSlot, CAMOUFLAGED_OT ) > 0 )
++		if ( pProfile->traits.ProfileOTraitLevel( CAMOUFLAGED_OT ) > 0 )
+ 		{
+ 			if ( gGameExternalOptions.fShowCamouflageFaces == TRUE )
+ 			{
+diff --git Laptop/mercs Files.cpp Laptop/mercs Files.cpp
+index d2dde81d..8576ad27 100644
+--- Laptop/mercs Files.cpp	
++++ Laptop/mercs Files.cpp	
+@@ -898,6 +898,7 @@ void DisplayMercMemberClickOnFaceHelpText( UINT8 ubMercID )
+ 		// clear string value
+ 		swprintf( sString, L"");
+ 
++		MERCPROFILESTRUCT *pProfile = &gMercProfiles[ubMercID];
+ 		if (gGameOptions.fNewTraitSystem) // SANDRO - old/new traits check
+ 		{
+ 			UINT8 ubTempSkillArray[30];
+@@ -907,12 +908,12 @@ void DisplayMercMemberClickOnFaceHelpText( UINT8 ubMercID )
+ 			// we also get the number of lines (skills) to be displayed 
+ 			for ( UINT8 ubCnt = 1; ubCnt < NUM_SKILLTRAITS_NT; ubCnt++ )
+ 			{
+-				if ( ProfileHasSkillTrait( ubMercID, ubCnt ) == 2 )
++				if ( pProfile->traits.ProfileNTraitLevel( (NTrait)ubCnt ) == 2 )
+ 				{
+ 					ubTempSkillArray[bNumSkillTraits] = (ubCnt + NEWTRAIT_MERCSKILL_EXPERTOFFSET);
+ 					bNumSkillTraits++;
+ 				}
+-				else if ( ProfileHasSkillTrait( ubMercID, ubCnt ) == 1 )
++				else if ( pProfile->traits.ProfileNTraitLevel( (NTrait)ubCnt ) == 1 )
+ 				{
+ 					ubTempSkillArray[bNumSkillTraits] = ubCnt;
+ 					bNumSkillTraits++;
+@@ -935,8 +936,8 @@ void DisplayMercMemberClickOnFaceHelpText( UINT8 ubMercID )
+ 		else
+ 		{
+ 			INT8 bSkill1 = 0, bSkill2 = 0; 	
+-			bSkill1 = gMercProfiles[ ubMercID ].bSkillTraits[0];
+-			bSkill2 = gMercProfiles[ ubMercID ].bSkillTraits[1];
++			bSkill1 = pProfile->bSkillTraits[0];
++			bSkill2 = pProfile->bSkillTraits[1];
+ 
+ 			if ( bSkill1 == 0 && bSkill2 == 0 )
+ 			{
+diff --git Laptop/personnel.cpp Laptop/personnel.cpp
+index 4e09db10..9415fc11 100644
+--- Laptop/personnel.cpp
++++ Laptop/personnel.cpp
+@@ -1820,6 +1820,7 @@ void DisplayCharStats( INT32 iId, INT32 iSlot )
+ 
+ 				   if ( !fAmIaRobot )
+ 				   {
++					   MERCPROFILESTRUCT *pProfile = &gMercProfiles[Menptr[iId].ubProfile];
+ 					   if ( gGameOptions.fNewTraitSystem ) // SANDRO - old/new traits check
+ 					   {
+ 						   UINT8 ubTempSkillArray[30];
+@@ -1829,12 +1830,12 @@ void DisplayCharStats( INT32 iId, INT32 iSlot )
+ 						   // we also get the number of lines (skills) to be displayed 
+ 						   for ( UINT8 ubCnt = 1; ubCnt < NUM_SKILLTRAITS_NT; ubCnt++ )
+ 						   {
+-							   if ( ProfileHasSkillTrait( Menptr[iId].ubProfile, ubCnt ) == 2 )
++							   if ( pProfile->traits.ProfileNTraitLevel( (NTrait)ubCnt ) == 2 )
+ 							   {
+ 								   ubTempSkillArray[bNumSkillTraits] = (ubCnt + NEWTRAIT_MERCSKILL_EXPERTOFFSET);
+ 								   bNumSkillTraits++;
+ 							   }
+-							   else if ( ProfileHasSkillTrait( Menptr[iId].ubProfile, ubCnt ) == 1 )
++							   else if ( pProfile->traits.ProfileNTraitLevel( (NTrait)ubCnt ) == 1 )
+ 							   {
+ 								   ubTempSkillArray[bNumSkillTraits] = ubCnt;
+ 								   bNumSkillTraits++;
+@@ -1976,8 +1977,8 @@ void DisplayCharStats( INT32 iId, INT32 iSlot )
+ 					   else
+ 					   {
+ 						   INT8 bSkill1 = 0, bSkill2 = 0;
+-						   bSkill1 = gMercProfiles[Menptr[iId].ubProfile].bSkillTraits[0];
+-						   bSkill2 = gMercProfiles[Menptr[iId].ubProfile].bSkillTraits[1];
++						   bSkill1 = pProfile->bSkillTraits[0];
++						   bSkill2 = pProfile->bSkillTraits[1];
+ 
+ 						   //if the 2 skills are the same, add the '(expert)' at the end
+ 						   if ( bSkill1 == bSkill2 && bSkill1 != 0 )
+@@ -8763,14 +8764,14 @@ void AssignPersonnelAchievementsHelpText( INT32 ubProfile )
+ 					wcscat( apStr, atStr );
+ 					break;
+ 				case 1: 
+-					if ( ProfileHasSkillTrait( ubProfile, DOCTOR_NT ) > 0 )
++					if ( gMercProfiles[ubProfile].traits.ProfileNTraitLevel( DOCTOR_NT ) > 0 )
+ 					{
+ 						swprintf(atStr, pPersonnelRecordsHelpTexts[ 26 ], gMercProfiles[ubProfile].records.usSurgeriesMade );
+ 						wcscat( apStr, atStr );
+ 					}
+ 					break;
+ 				case 2: 
+-					if ( ProfileHasSkillTrait( ubProfile, DOCTOR_NT ) > 1 )
++					if ( gMercProfiles[ubProfile].traits.ProfileNTraitLevel( DOCTOR_NT ) > 1 )
+ 					{
+ 						swprintf(atStr, pPersonnelRecordsHelpTexts[ 26 ], gMercProfiles[ubProfile].records.usSurgeriesMade );
+ 						wcscat( apStr, atStr );
+@@ -8798,7 +8799,7 @@ void AssignPersonnelAchievementsHelpText( INT32 ubProfile )
+ 	}
+ 	if (gMercProfiles[ubProfile].records.usAmbushesExperienced > 0 || fShowRecordsIfZero)
+ 	{
+-		if ( gGameOptions.fNewTraitSystem && ( ProfileHasSkillTrait( ubProfile, SCOUTING_NT ) > 0 ) )
++		if ( gGameOptions.fNewTraitSystem && ( gMercProfiles[ubProfile].traits.ProfileNTraitLevel( SCOUTING_NT ) > 0 ) )
+ 		{
+ 			swprintf(atStr, pPersonnelRecordsHelpTexts[ 29 ], gMercProfiles[ubProfile].records.usAmbushesExperienced );
+ 			wcscat( apStr, atStr );
+@@ -8843,7 +8844,7 @@ void AssignPersonnelBattlesHelpText( INT32 ubProfile )
+ 	}
+ 	if (gMercProfiles[ubProfile].records.usAmbushesExperienced > 0 || fShowRecordsIfZero)
+ 	{		
+-		if (!( gGameOptions.fNewTraitSystem && ( ProfileHasSkillTrait( ubProfile, SCOUTING_NT ) > 0 ) ))
++		if (!( gGameOptions.fNewTraitSystem && ( gMercProfiles[ubProfile].traits.ProfileNTraitLevel( SCOUTING_NT ) > 0 ) ))
+ 		{
+ 			swprintf(atStr, pPersonnelRecordsHelpTexts[ 34 ], gMercProfiles[ubProfile].records.usAmbushesExperienced );
+ 			wcscat( apStr, atStr );
+diff --git Strategic/Assignments.cpp Strategic/Assignments.cpp
+index 4372aa9e..97a21c3b 100644
+--- Strategic/Assignments.cpp
++++ Strategic/Assignments.cpp
+@@ -2727,7 +2727,7 @@ BOOLEAN CanCharacterSnitch( SOLDIERTYPE *pSoldier )
+ 		return( FALSE );
+ 
+ 	// has character a snitch trait
+-	if( ProfileHasSkillTrait( pSoldier->ubProfile, SNITCH_NT ) )
++	if( gMercProfiles[pSoldier->ubProfile].traits.ProfileNTraitLevel( SNITCH_NT ) )
+ 	{
+ 		return( TRUE );
+ 	}
+diff --git Strategic/Game Init.cpp Strategic/Game Init.cpp
+index 00d0fd3f..24172006 100644
+--- Strategic/Game Init.cpp	
++++ Strategic/Game Init.cpp	
+@@ -661,7 +661,7 @@ fFirstTimeInMapScreen = TRUE;
+ 		{
+ 			for(int uiLoop=0; uiLoop< NUM_PROFILES; uiLoop++)
+ 			{
+-				if ( ProfileHasSkillTrait( uiLoop, CAMOUFLAGED_OT ) > 0 )
++				if ( gMercProfiles[uiLoop].traits.ProfileOTraitLevel( CAMOUFLAGED_OT ) > 0 )
+ 				{
+ 					gCamoFace[uiLoop].gCamoface = TRUE;
+ 				}									
+@@ -1114,7 +1114,7 @@ void ReStartingGame()
+ 		{
+ 			for(int uiLoop=0; uiLoop< NUM_PROFILES; uiLoop++)
+ 			{
+-				if ( ProfileHasSkillTrait( uiLoop, CAMOUFLAGED_OT ) > 0 )
++				if ( gMercProfiles[uiLoop].traits.ProfileOTraitLevel( CAMOUFLAGED_OT ) > 0 )
+ 					{
+ 						gCamoFace[uiLoop].gCamoface = TRUE;
+ 					}
+diff --git Strategic/Hourly Update.cpp Strategic/Hourly Update.cpp
+index 1e2ff7b5..dfc6d5f1 100644
+--- Strategic/Hourly Update.cpp	
++++ Strategic/Hourly Update.cpp	
+@@ -271,6 +271,41 @@ void HandleQuarterHourUpdate()
+ 	DecayTacticalMoraleModifiers( );
+ }
+ 
++BOOLEAN HandleSnitching( SOLDIERTYPE *pSoldier, SOLDIERTYPE *pOtherSoldier ) {
++	// note - snitches stop others, but can get wasted themselves (if they have drug use specifically set in background...)
++	if ( pOtherSoldier
++		&& !pOtherSoldier->flags.fBetweenSectors
++		&& pOtherSoldier->bAssignment != IN_TRANSIT
++		&& pOtherSoldier->bAssignment != ASSIGNMENT_POW
++		&& !SPY_LOCATION( pOtherSoldier->bAssignment )
++		&& pOtherSoldier->bActive
++		&& !pOtherSoldier->flags.fMercAsleep
++		&& pSoldier->ubProfile != pOtherSoldier->ubProfile )
++	{
++		if ( gMercProfiles[pOtherSoldier->ubProfile].traits.ProfileNTraitLevel( SNITCH_NT ) && !( pOtherSoldier->usSoldierFlagMask2 & SOLDIER_PREVENT_MISBEHAVIOUR_OFF ) )
++		{
++			if ( pSoldier->sSectorX == pOtherSoldier->sSectorX && pSoldier->sSectorY == pOtherSoldier->sSectorY && pSoldier->bSectorZ == pOtherSoldier->bSectorZ )
++			{
++				UINT16 bPreventChance = ( EffectiveLeadership( pOtherSoldier ) + EffectiveExpLevel( pOtherSoldier, FALSE ) / 2 );
++				bPreventChance += 25 * pOtherSoldier->traits.SoldierNTraitLevel( SQUADLEADER_NT );
++				bPreventChance -= 25 * pSoldier->traits.StealthLevels();
++
++				// keep 1% chance no matter what
++				bPreventChance = max( 0, min( 99, bPreventChance ) );
++				if ( bPreventChance > PreRandom( 100 ) )
++				{
++					// merc is not amused by being prevented
++					HandleMoraleEvent( pSoldier, MORALE_PREVENTED_MISBEHAVIOUR, pSoldier->sSectorX, pSoldier->sSectorX, pSoldier->bSectorZ );
++					// also here would be a place for dynamic relationship decrease between them
++					// Flugente: then lets do that, shall we?
++					AddOpinionEvent( pSoldier->ubProfile, pOtherSoldier->ubProfile, OPINIONEVENT_SNITCHINTERFERENCE );
++					return TRUE;
++				}
++			}
++		}
++	}
++	return FALSE;
++}
+ 
+ void HourlyQuestUpdate()
+ {
+@@ -416,38 +451,10 @@ void HourlyLarryUpdate()
+ 					for( INT32 cnt2 = gTacticalStatus.Team[ OUR_TEAM ].bFirstID; cnt2 <= gTacticalStatus.Team[ OUR_TEAM ].bLastID; ++cnt2 )
+ 					{					
+ 						pOtherSoldier = MercPtrs[ cnt2 ];
+-						// note - snitches stop others, but can get wasted themselves (if they have drug use specifically set in background...)
+-						if( pOtherSoldier && !pOtherSoldier->flags.fBetweenSectors && pOtherSoldier->bActive && !pOtherSoldier->flags.fMercAsleep && pSoldier->ubProfile != pOtherSoldier->ubProfile )
++						if ( HandleSnitching( pSoldier, pOtherSoldier ) )
+ 						{
+-							if (ProfileHasSkillTrait(pOtherSoldier->ubProfile, SNITCH_NT) && !(pOtherSoldier->usSoldierFlagMask2 & SOLDIER_PREVENT_MISBEHAVIOUR_OFF))
+-							{
+-								if( pSoldier->sSectorX == pOtherSoldier->sSectorX && pSoldier->sSectorY == pOtherSoldier->sSectorY && pSoldier->bSectorZ == pOtherSoldier->bSectorZ )
+-								{
+-									UINT16 bPreventChance = ( EffectiveLeadership( pOtherSoldier ) + EffectiveExpLevel( pOtherSoldier, FALSE) / 2);
+-									if (gGameOptions.fNewTraitSystem)
+-									{
+-										bPreventChance += 25 * NUM_SKILL_TRAITS( pOtherSoldier, SQUADLEADER_NT );
+-										bPreventChance -= 25 * NUM_SKILL_TRAITS( pSoldier, STEALTHY_NT );
+-									}
+-									else
+-									{
+-										bPreventChance -= 25 * NUM_SKILL_TRAITS( pSoldier, STEALTHY_OT );
+-									}
+-									// keep 1% chance no matter what
+-									bPreventChance = max( 0, min( 99, bPreventChance ) );
+-									if( bPreventChance > PreRandom( 100 ) )
+-									{
+-										// merc is not amused by being prevented
+-										HandleMoraleEvent( pSoldier, MORALE_PREVENTED_MISBEHAVIOUR, pSoldier->sSectorX, pSoldier->sSectorX, pSoldier->bSectorZ );
+-										// also here would be a place for dynamic relationship decrease between them
+-										// Flugente: then lets do that, shall we?
+-										AddOpinionEvent( pSoldier->ubProfile, pOtherSoldier->ubProfile, OPINIONEVENT_SNITCHINTERFERENCE );
+-
+-										fSnitchStoppedBehaviour = TRUE;
+-										continue;
+-									}
+-								}
+-							}
++							fSnitchStoppedBehaviour = TRUE;
++							continue; // really continue and not break?
+ 						}
+ 					}
+ 					
+@@ -594,39 +601,10 @@ void HourlyDisabilityUpdate( )
+ 					{
+ 						pOtherSoldier = MercPtrs[cnt2];
+ 
+-						// note - snitches stop others, but can get wasted themselves (if they have drug use specifically set in background...)
+-						if ( pOtherSoldier && !pOtherSoldier->flags.fBetweenSectors && pOtherSoldier->bActive && !pOtherSoldier->flags.fMercAsleep && pSoldier->ubProfile != pOtherSoldier->ubProfile )
++						if ( HandleSnitching( pSoldier, pOtherSoldier ) )
+ 						{
+-							if (ProfileHasSkillTrait(pOtherSoldier->ubProfile, SNITCH_NT) && !(pOtherSoldier->usSoldierFlagMask2 & SOLDIER_PREVENT_MISBEHAVIOUR_OFF))
+-							{
+-								if ( pSoldier->sSectorX == pOtherSoldier->sSectorX && pSoldier->sSectorY == pOtherSoldier->sSectorY && pSoldier->bSectorZ == pOtherSoldier->bSectorZ )
+-								{
+-									UINT16 bPreventChance = (EffectiveLeadership( pOtherSoldier ) + EffectiveExpLevel( pOtherSoldier, FALSE) / 2);
+-									if ( gGameOptions.fNewTraitSystem )
+-									{
+-										bPreventChance += 25 * NUM_SKILL_TRAITS( pOtherSoldier, SQUADLEADER_NT );
+-										bPreventChance -= 25 * NUM_SKILL_TRAITS( pSoldier, STEALTHY_NT );
+-									}
+-									else
+-									{
+-										bPreventChance -= 25 * NUM_SKILL_TRAITS( pSoldier, STEALTHY_OT );
+-									}
+-
+-									// keep 1% chance no matter what
+-									bPreventChance = max( 0, min( 99, bPreventChance ) );
+-									if ( Chance( bPreventChance ) )
+-									{
+-										// merc is not amused by being prevented
+-										HandleMoraleEvent( pSoldier, MORALE_PREVENTED_MISBEHAVIOUR, pSoldier->sSectorX, pSoldier->sSectorX, pSoldier->bSectorZ );
+-										// also here would be a place for dynamic relationship decrease between them
+-										// Flugente: then lets do that, shall we?
+-										AddOpinionEvent( pSoldier->ubProfile, pOtherSoldier->ubProfile, OPINIONEVENT_SNITCHINTERFERENCE );
+-
+-										fSnitchStoppedBehaviour = TRUE;
+-										continue;
+-									}
+-								}
+-							}
++							fSnitchStoppedBehaviour = TRUE;
++							continue; // really continue and not break?
+ 						}
+ 					}
+ 
+@@ -719,47 +697,10 @@ void HourlyStealUpdate()
+ 			{
+ 				pOtherSoldier = MercPtrs[cnt2];
+ 
+-				// note - snitches stop others, but can scrounge themselves (if they have scrounging specifically set in background...)
+-				if ( pOtherSoldier
+-					&& !pOtherSoldier->flags.fBetweenSectors
+-					&& pOtherSoldier->bAssignment != IN_TRANSIT
+-					&& pOtherSoldier->bAssignment != ASSIGNMENT_POW
+-					&& !SPY_LOCATION( pOtherSoldier->bAssignment )
+-					&& pOtherSoldier->bActive
+-					&& !pOtherSoldier->flags.fMercAsleep
+-					&& pSoldier->ubProfile != pOtherSoldier->ubProfile )
++				if ( HandleSnitching( pSoldier, pOtherSoldier ) )
+ 				{
+-					if (ProfileHasSkillTrait(pOtherSoldier->ubProfile, SNITCH_NT) && !(pOtherSoldier->usSoldierFlagMask2 & SOLDIER_PREVENT_MISBEHAVIOUR_OFF))
+-					{
+-						if ( pSoldier->sSectorX == pOtherSoldier->sSectorX && pSoldier->sSectorY == pOtherSoldier->sSectorY && sectorz == pOtherSoldier->bSectorZ )
+-						{
+-							UINT16 bPreventChance = ( EffectiveLeadership( pOtherSoldier ) + EffectiveExpLevel( pOtherSoldier, FALSE ) / 2 );
+-							if ( gGameOptions.fNewTraitSystem )
+-							{
+-								bPreventChance += 25 * NUM_SKILL_TRAITS( pOtherSoldier, SQUADLEADER_NT );
+-								bPreventChance -= 25 * NUM_SKILL_TRAITS( pSoldier, STEALTHY_NT );
+-							}
+-							else
+-							{
+-								bPreventChance -= 25 * NUM_SKILL_TRAITS( pSoldier, STEALTHY_OT );
+-							}
+-
+-							// keep 1% chance no matter what
+-							bPreventChance = max( 0, min( 99, bPreventChance ) );
+-							if ( bPreventChance > PreRandom( 100 ) )
+-							{
+-								// merc is not amused by being prevented
+-								HandleMoraleEvent( pSoldier, MORALE_PREVENTED_MISBEHAVIOUR, pSoldier->sSectorX, pSoldier->sSectorX, pSoldier->bSectorZ );
+-								// also here would be a place for dynamic relationship decrease between them
+-								// Flugente: then lets do that, shall we?
+-								AddOpinionEvent( pSoldier->ubProfile, pOtherSoldier->ubProfile, OPINIONEVENT_SNITCHINTERFERENCE );
+-
+-								fSnitchStoppedBehaviour = TRUE;
+-
+-								continue;
+-							}
+-						}
+-					}
++					fSnitchStoppedBehaviour = TRUE;
++					continue; // really continue and not break?
+ 				}
+ 			}
+ 
+diff --git Strategic/Map Screen Interface.cpp Strategic/Map Screen Interface.cpp
+index d5860051..9da5b4d7 100644
+--- Strategic/Map Screen Interface.cpp	
++++ Strategic/Map Screen Interface.cpp	
+@@ -1969,73 +1969,7 @@ void UpdateCharRegionHelpText( void )
+ 			// clear pStr value
+ 			swprintf( sString, L"");
+ 
+-			if (gGameOptions.fNewTraitSystem) // SANDRO - old/new traits check
+-			{
+-				UINT8 ubTempSkillArray[30];
+-				INT8 bNumSkillTraits = 0;
+-
+-				// lets rearrange our skills to a temp array
+-				// we also get the number of lines (skills) to be displayed 
+-				for ( UINT8 ubCnt = 1; ubCnt < NUM_SKILLTRAITS_NT; ++ubCnt )
+-				{
+-					if ( ProfileHasSkillTrait( pSoldier->ubProfile, ubCnt ) == 2 )
+-					{
+-						ubTempSkillArray[bNumSkillTraits] = (ubCnt + NEWTRAIT_MERCSKILL_EXPERTOFFSET);
+-						++bNumSkillTraits;
+-					}
+-					else if ( ProfileHasSkillTrait( pSoldier->ubProfile, ubCnt ) == 1 )
+-					{
+-						ubTempSkillArray[bNumSkillTraits] = ubCnt;
+-						++bNumSkillTraits;
+-					}
+-				}
+-
+-				if ( bNumSkillTraits == 0 )
+-				{
+-					swprintf( sString, L"%s", pPersonnelScreenStrings[ PRSNL_TXT_NOSKILLS ] );
+-				}
+-				else
+-				{
+-					for ( UINT8 ubCnt = 0; ubCnt < bNumSkillTraits; ubCnt++ )
+-					{
+-						swprintf( sTemp, L"%s\n", gzMercSkillTextNew[ ubTempSkillArray[ubCnt] ] );
+-						wcscat( sString, sTemp );
+-					}
+-				}
+-			}
+-			else
+-			{
+-				INT8 bSkill1 = 0, bSkill2 = 0; 	
+-				bSkill1 = gMercProfiles[ pSoldier->ubProfile ].bSkillTraits[0];
+-				bSkill2 = gMercProfiles[ pSoldier->ubProfile ].bSkillTraits[1];
+-
+-				if ( bSkill1 == 0 && bSkill2 == 0 )
+-				{
+-					swprintf( sString, L"%s", pPersonnelScreenStrings[ PRSNL_TXT_NOSKILLS ] );
+-				}
+-				else
+-				{
+-					//if the 2 skills are the same, add the '(expert)' at the end
+-					if( bSkill1 == bSkill2 )
+-					{
+-						swprintf( sString, L"%s %s", gzMercSkillText[bSkill1], gzMercSkillText[EXPERT] );
+-					}
+-					else
+-					{
+-						//Display the first skill
+-						if( bSkill1 != 0 )
+-						{
+-							swprintf( sString, L"%s\n", gzMercSkillText[bSkill1] );
+-						}
+-
+-						if( bSkill2 != 0 )
+-						{
+-							swprintf( sTemp, L"%s", gzMercSkillText[bSkill2] );
+-							wcscat( sString, sTemp );
+-						}
+-					}
+-				}
+-			}
++			gMercProfiles[pSoldier->ubProfile].traits.FillHelpText( sString );
+ 			SetRegionFastHelpText( &gCharInfoFaceRegion, sString );
+ 		}
+ 		else
+diff --git Strategic/Strategic Merc Handler.cpp Strategic/Strategic Merc Handler.cpp
+index 9ae99093..a9a2641a 100644
+--- Strategic/Strategic Merc Handler.cpp	
++++ Strategic/Strategic Merc Handler.cpp	
+@@ -351,7 +351,7 @@ void MercDailyUpdate()
+ 				}
+ 			}
+ 
+-			if( !MercThinksHisMoraleIsTooLow( pSoldier ) && ProfileHasSkillTrait( pSoldier->ubProfile, SNITCH_NT ) )
++			if( !MercThinksHisMoraleIsTooLow( pSoldier ) && gMercProfiles[pSoldier->ubProfile].traits.ProfileNTraitLevel( SNITCH_NT ) )
+ 			{
+ 				ModifyPlayerReputation( gSkillTraitValues.ubSNTPassiveReputationGain );
+ 			}
+diff --git Tactical/Campaign.cpp Tactical/Campaign.cpp
+index beac53b9..7c1faeb7 100644
+--- Tactical/Campaign.cpp
++++ Tactical/Campaign.cpp
+@@ -1315,18 +1315,13 @@ void HandleUnhiredMercDeaths( INT32 iProfileID )
+ 		{
+ 			sChance += 1;
+ 		}
+-		if ( ProfileHasSkillTrait( iProfileID, SQUADLEADER_NT ) > 0 )
+-			sChance -= ProfileHasSkillTrait( iProfileID, SQUADLEADER_NT );
+-		if ( ProfileHasSkillTrait( iProfileID, TECHNICIAN_NT ) > 0 )
+-			sChance -= ProfileHasSkillTrait( iProfileID, TECHNICIAN_NT );
+-		if ( ProfileHasSkillTrait( iProfileID, DOCTOR_NT ) > 0 )
+-			sChance -= ProfileHasSkillTrait( iProfileID, DOCTOR_NT );
+-		if ( ProfileHasSkillTrait( iProfileID, STEALTHY_NT ) > 0 )
+-			sChance -= ProfileHasSkillTrait( iProfileID, STEALTHY_NT );
+-		if ( ProfileHasSkillTrait( iProfileID, BODYBUILDING_NT ) > 0 )
+-			sChance -= ProfileHasSkillTrait( iProfileID, BODYBUILDING_NT );
+-		if ( ProfileHasSkillTrait( iProfileID, SCOUTING_NT ) > 0 )
+-			sChance -= ProfileHasSkillTrait( iProfileID, SCOUTING_NT );
++		
++		sChance -= pProfile->traits.ProfileNTraitLevel( SQUADLEADER_NT );
++		sChance -= pProfile->traits.ProfileNTraitLevel( TECHNICIAN_NT );
++		sChance -= pProfile->traits.ProfileNTraitLevel( DOCTOR_NT );
++		sChance -= pProfile->traits.ProfileNTraitLevel( STEALTHY_NT );
++		sChance -= pProfile->traits.ProfileNTraitLevel( BODYBUILDING_NT );
++		sChance -= pProfile->traits.ProfileNTraitLevel( SCOUTING_NT );
+ 	}
+ 	else
+ 	{		
+@@ -1340,8 +1335,7 @@ void HandleUnhiredMercDeaths( INT32 iProfileID )
+ 				break;
+ 		}
+ 		// stealthy guys are slightly less likely to get killed (they're careful)
+-		if ( ProfileHasSkillTrait( iProfileID, STEALTHY_OT ) > 0 )
+-			sChance -= ProfileHasSkillTrait( iProfileID, STEALTHY_OT );
++		sChance -= pProfile->traits.ProfileOTraitLevel( STEALTHY_OT );
+ 	}
+ 
+ 	if ((INT16) PreRandom(1000) < sChance)
+diff --git Tactical/DisplayCover.cpp Tactical/DisplayCover.cpp
+index c562eee9..14315e68 100644
+--- Tactical/DisplayCover.cpp
++++ Tactical/DisplayCover.cpp
+@@ -1526,7 +1526,7 @@ void CalculateTrackerRange( )
+ 	if ( gusSelectedSoldier == NOBODY || !GetSoldier( &pSoldier, gusSelectedSoldier ) ||  !pSoldier->bInSector )
+ 		return;
+ 
+-	FLOAT trackerskill = (FLOAT)(NUM_SKILL_TRAITS( pSoldier, SURVIVAL_NT ) * gSkillTraitValues.usSVTrackerAbility + pSoldier->GetBackgroundValue( BG_TRACKER_ABILITY )) / 100.0f;
++	FLOAT trackerskill = (FLOAT)( pSoldier->traits.usSVTrackerAbility() + pSoldier->GetBackgroundValue( BG_TRACKER_ABILITY )) / 100.0f;
+ 	
+ 	if ( trackerskill < 0.01f )
+ 		return;
+diff --git Tactical/Faces.cpp Tactical/Faces.cpp
+index 20c39020..ef6a0522 100644
+--- Tactical/Faces.cpp
++++ Tactical/Faces.cpp
+@@ -253,14 +253,14 @@ INT32	InternalInitFace( UINT8 usMercProfileID, UINT8 ubSoldierID, UINT32 uiInitF
+ 		// SANDRO - old/new traits check (I am not sure if this is used at all)
+ 		if ( gGameOptions.fNewTraitSystem )
+ 		{
+-			if ( ProfileHasSkillTrait( TEX, RANGER_NT ) > 0 )
++			if ( gMercProfiles[TEX].traits.ProfileNTraitLevel( RANGER_NT ) > 0 )
+ 			{
+ 				sprintf( VObjectDesc.ImageFile, "FACES\\B167c.sti" );
+ 			}
+ 		}
+ 		else
+ 		{
+-			if ( ProfileHasSkillTrait( TEX, CAMOUFLAGED_OT ) > 0 )
++			if ( gMercProfiles[TEX].traits.ProfileOTraitLevel( CAMOUFLAGED_OT ) > 0 )
+ 			{
+ 				sprintf( VObjectDesc.ImageFile, "FACES\\B167c.sti" );
+ 			}
+diff --git Tactical/Food.cpp Tactical/Food.cpp
+index da6eff23..1bd50fca 100644
+--- Tactical/Food.cpp
++++ Tactical/Food.cpp
+@@ -399,11 +399,8 @@ void HourlyFoodSituationUpdate( SOLDIERTYPE *pSoldier )
+ 	FLOAT specialfoodmodifier  = 100.0 + pSoldier->GetBackgroundValue( BG_PERC_FOOD );
+ 	FLOAT specialdrinkmodifier = 100.0 + pSoldier->GetBackgroundValue( BG_PERC_WATER );
+ 
+-	if ( HAS_SKILL_TRAIT( pSoldier, SURVIVAL_NT ) )
+-	{
+-		specialfoodmodifier  += gSkillTraitValues.sSVFoodConsumption;
+-		specialdrinkmodifier += gSkillTraitValues.sSVDrinkConsumption;
+-	}
++	specialfoodmodifier  += pSoldier->traits.sSVFoodConsumption();
++	specialdrinkmodifier += pSoldier->traits.sSVDrinkConsumption();
+ 
+ 	for ( int i = 0; i < NUM_DISEASES; ++i )
+ 	{
+diff --git Tactical/Interface Enhanced.cpp Tactical/Interface Enhanced.cpp
+index f2916431..055f463a 100644
+--- Tactical/Interface Enhanced.cpp	
++++ Tactical/Interface Enhanced.cpp	
+@@ -8105,7 +8105,7 @@ void DrawWeaponValues( OBJECTTYPE * gpItemDescObject )
+ 			ubNumLine = 14;
+ 
+ 			// Get final Attack Cost
+-			INT16 iFinalSingleAPCost = (INT16)(ubAttackAPs * GetAttackAPTraitMultiplier( gpItemDescSoldier, gpItemDescObject, WM_NORMAL ) + 0.5);
++			INT16 iFinalSingleAPCost = (INT16)(ubAttackAPs * gpItemDescSoldier->traits.GetAttackAPMultiplier( gpItemDescObject, WM_NORMAL ) + 0.5);
+ 
+ 			// Get base Attack Cost
+ 			INT16 iSingleAPCost = ubBasicAttackAPs;
+@@ -8125,7 +8125,7 @@ void DrawWeaponValues( OBJECTTYPE * gpItemDescObject )
+ 			else if( !Weapon[gpComparedItemDescObject->usItem].NoSemiAuto )
+ 			{
+ 				// Get final Attack Cost
+-				INT16 iComparedFinalSingleAPCost = (INT16)(BaseAPsToShootOrStab( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject, gpItemDescSoldier ) * GetAttackAPTraitMultiplier( gpItemDescSoldier, gpItemDescObject, WM_NORMAL ) + 0.5);
++				INT16 iComparedFinalSingleAPCost = (INT16)(BaseAPsToShootOrStab( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject, gpItemDescSoldier ) * gpItemDescSoldier->traits.GetAttackAPMultiplier( gpItemDescObject, WM_NORMAL ) + 0.5);
+ 				// Get base Attack Cost
+ 				INT16 iComparedSingleAPCost = BaseAPsToShootOrStabNoModifier( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject );
+ 				// Get Attack Cost Modifier
+@@ -8149,7 +8149,7 @@ void DrawWeaponValues( OBJECTTYPE * gpItemDescObject )
+ 			// Set line to draw into
+ 			ubNumLine = 14;
+ 			// Get final Attack Cost
+-			INT16 iFinalSingleAPCost = (INT16)(BaseAPsToShootOrStab( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject, gpItemDescSoldier ) * GetAttackAPTraitMultiplier( gpItemDescSoldier, gpItemDescObject, WM_NORMAL ) + 0.5);
++			INT16 iFinalSingleAPCost = (INT16)(BaseAPsToShootOrStab( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject, gpItemDescSoldier ) * gpItemDescSoldier->traits.GetAttackAPMultiplier( gpItemDescObject, WM_NORMAL ) + 0.5);
+ 			// Get base Attack Cost
+ 			INT16 iSingleAPCost = BaseAPsToShootOrStabNoModifier( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject );
+ 			// Get Attack Cost Modifier
+@@ -8169,7 +8169,7 @@ void DrawWeaponValues( OBJECTTYPE * gpItemDescObject )
+ 			ubNumLine = 15;
+ 
+ 			// Get final Burst Cost
+-			INT16 iFinalBurstAPCost = (INT16)( (FLOAT)ubAttackAPs * GetAttackAPTraitMultiplier( gpItemDescSoldier, gpItemDescObject, WM_BURST ) + CalcAPsToBurst( APBPConstants[DEFAULT_APS], gpItemDescObject, gpItemDescSoldier ) + 0.5f );
++			INT16 iFinalBurstAPCost = (INT16)( (FLOAT)ubAttackAPs * gpItemDescSoldier->traits.GetAttackAPMultiplier( gpItemDescObject, WM_BURST ) + CalcAPsToBurst( APBPConstants[DEFAULT_APS], gpItemDescObject, gpItemDescSoldier ) + 0.5f );
+ 
+ 			// Get base Burst Cost
+ 			INT16 iBurstAPCost = ubBasicAttackAPs + CalcAPsToBurstNoModifier( APBPConstants[DEFAULT_APS], gpItemDescObject );
+@@ -8190,7 +8190,7 @@ void DrawWeaponValues( OBJECTTYPE * gpItemDescObject )
+ 			{
+ 				// Get final Burst Cost
+ 				INT16 iComparedFinalBurstAPCost = (INT16)( (FLOAT)BaseAPsToShootOrStab( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject, gpItemDescSoldier )
+-					 * GetAttackAPTraitMultiplier( gpItemDescSoldier, gpComparedItemDescObject, WM_BURST )
++					 * gpItemDescSoldier->traits.GetAttackAPMultiplier( gpComparedItemDescObject, WM_BURST )
+ 					 + CalcAPsToBurst( APBPConstants[DEFAULT_APS], gpComparedItemDescObject, gpItemDescSoldier ) + 0.5f );
+ 				// Get base Burst Cost
+ 				INT16 iComparedBurstAPCost = BaseAPsToShootOrStabNoModifier( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject )
+@@ -8216,7 +8216,7 @@ void DrawWeaponValues( OBJECTTYPE * gpItemDescObject )
+ 			// Set line to draw into
+ 			ubNumLine = 15;
+ 			INT16 iFinalBurstAPCost = (INT16)( (FLOAT)BaseAPsToShootOrStab( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject, gpItemDescSoldier )
+-				 * GetAttackAPTraitMultiplier( gpItemDescSoldier, gpComparedItemDescObject, WM_BURST )
++				 * gpItemDescSoldier->traits.GetAttackAPMultiplier( gpComparedItemDescObject, WM_BURST )
+ 				 + CalcAPsToBurst( APBPConstants[DEFAULT_APS], gpComparedItemDescObject, gpItemDescSoldier ) + 0.5f );
+ 			// Get base Burst Cost
+ 			INT16 iBurstAPCost = BaseAPsToShootOrStabNoModifier( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject )
+@@ -8238,7 +8238,7 @@ void DrawWeaponValues( OBJECTTYPE * gpItemDescObject )
+ 			ubNumLine = 16;
+ 
+ 			// Get final Autofire Cost
+-			INT16 iFinalAutoAPCost = (INT16)( (FLOAT)ubAttackAPs * GetAttackAPTraitMultiplier( gpItemDescSoldier, gpItemDescObject, WM_AUTOFIRE ) + CalcAPsToAutofire( APBPConstants[DEFAULT_APS], gpItemDescObject, 3, gpItemDescSoldier ) + 0.5f );
++			INT16 iFinalAutoAPCost = (INT16)( (FLOAT)ubAttackAPs * gpItemDescSoldier->traits.GetAttackAPMultiplier( gpItemDescObject, WM_AUTOFIRE ) + CalcAPsToAutofire( APBPConstants[DEFAULT_APS], gpItemDescObject, 3, gpItemDescSoldier ) + 0.5f );
+ 
+ 			// Get base Autofire Cost
+ 			INT16 iAutoAPCost = ubBasicAttackAPs + CalcAPsToAutofireNoModifier( APBPConstants[DEFAULT_APS], gpItemDescObject, 3 );
+@@ -8259,7 +8259,7 @@ void DrawWeaponValues( OBJECTTYPE * gpItemDescObject )
+ 			{
+ 				// Get final Autofire Cost
+ 				INT16 iComparedFinalAutoAPCost = (INT16)( (FLOAT)BaseAPsToShootOrStab( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject, gpItemDescSoldier )
+-					 * GetAttackAPTraitMultiplier( gpItemDescSoldier, gpComparedItemDescObject, WM_AUTOFIRE )
++					 * gpItemDescSoldier->traits.GetAttackAPMultiplier( gpComparedItemDescObject, WM_AUTOFIRE )
+ 					 + CalcAPsToAutofire( APBPConstants[DEFAULT_APS], gpComparedItemDescObject, 3, gpItemDescSoldier ) + 0.5f );
+ 				// Get base Autofire Cost
+ 				INT16 iComparedAutoAPCost = BaseAPsToShootOrStabNoModifier( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject )
+@@ -8286,7 +8286,7 @@ void DrawWeaponValues( OBJECTTYPE * gpItemDescObject )
+ 			ubNumLine = 16;
+ 			// Get final Autofire Cost
+ 			INT16 iFinalAutoAPCost = (INT16)( (FLOAT)BaseAPsToShootOrStab( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject, gpItemDescSoldier )
+-				 * GetAttackAPTraitMultiplier( gpItemDescSoldier, gpComparedItemDescObject, WM_AUTOFIRE )
++				 * gpItemDescSoldier->traits.GetAttackAPMultiplier( gpComparedItemDescObject, WM_AUTOFIRE )
+ 				 + CalcAPsToAutofire( APBPConstants[DEFAULT_APS], gpComparedItemDescObject, 3, gpItemDescSoldier ) + 0.5f );
+ 			// Get base Autofire Cost
+ 			INT16 iAutoAPCost = BaseAPsToShootOrStabNoModifier( APBPConstants[DEFAULT_APS], APBPConstants[DEFAULT_AIMSKILL], gpComparedItemDescObject )
+diff --git Tactical/Interface Panels.cpp Tactical/Interface Panels.cpp
+index 0e02cf9e..e4ea4196 100644
+--- Tactical/Interface Panels.cpp	
++++ Tactical/Interface Panels.cpp	
+@@ -3008,72 +3008,8 @@ void RenderSMPanel( BOOLEAN *pfDirty )
+ 			// clear pStr value
+ 			swprintf( pStr, L"");
+ 
+-			if (gGameOptions.fNewTraitSystem) // SANDRO - old/new traits check
+-			{
+-				UINT8 ubTempSkillArray[30];
+-				INT8 bNumSkillTraits = 0;
+-
+-				// lets rearrange our skills to a temp array
+-				// we also get the number of lines (skills) to be displayed 
+-				for ( UINT8 ubCnt = 1; ubCnt < NUM_SKILLTRAITS_NT; ++ubCnt )
+-				{
+-					if ( ProfileHasSkillTrait( gpSMCurrentMerc->ubProfile, ubCnt ) == 2 )
+-					{
+-						ubTempSkillArray[bNumSkillTraits] = (ubCnt + NEWTRAIT_MERCSKILL_EXPERTOFFSET);
+-						bNumSkillTraits++;
+-					}
+-					else if ( ProfileHasSkillTrait( gpSMCurrentMerc->ubProfile, ubCnt ) == 1 )
+-					{
+-						ubTempSkillArray[bNumSkillTraits] = ubCnt;
+-						bNumSkillTraits++;
+-					}
+-				}
++			gMercProfiles[gpSMCurrentMerc->ubProfile].traits.FillHelpText( sString );
+ 
+-				if ( bNumSkillTraits == 0 )
+-				{
+-					swprintf( pStr, L"%s", pPersonnelScreenStrings[ PRSNL_TXT_NOSKILLS ] );
+-				}
+-				else
+-				{
+-					for ( UINT8 ubCnt = 0; ubCnt < bNumSkillTraits; ++ubCnt )
+-					{
+-						swprintf( sTemp, L"%s\n", gzMercSkillTextNew[ ubTempSkillArray[ubCnt] ] );
+-						wcscat( pStr, sTemp );
+-					}
+-				}
+-			}
+-			else
+-			{
+-				INT8 bSkill1 = 0, bSkill2 = 0; 	
+-				bSkill1 = gMercProfiles[ gpSMCurrentMerc->ubProfile ].bSkillTraits[0];
+-				bSkill2 = gMercProfiles[ gpSMCurrentMerc->ubProfile ].bSkillTraits[1];
+-
+-				if ( bSkill1 == 0 && bSkill2 == 0 )
+-				{
+-					swprintf( pStr, L"%s", pPersonnelScreenStrings[ PRSNL_TXT_NOSKILLS ] );
+-				}
+-				else
+-				{
+-					//if the 2 skills are the same, add the '(expert)' at the end
+-					if( bSkill1 == bSkill2 )
+-					{
+-						swprintf( pStr, L"%s %s", gzMercSkillText[bSkill1], gzMercSkillText[EXPERT] );
+-					}
+-					else
+-					{
+-						//Display the first skill
+-						if( bSkill1 != 0 )
+-						{
+-							swprintf( pStr, L"%s\n", gzMercSkillText[bSkill1] );
+-						}
+-						if( bSkill2 != 0 )
+-						{
+-							swprintf( sTemp, L"%s", gzMercSkillText[bSkill2] );
+-							wcscat( pStr, sTemp );
+-						}
+-					}
+-				}
+-			}
+ 			SetRegionFastHelpText( &gSM_SELMERCPanelRegion, pStr );
+ 			}
+ 		}
+@@ -5547,73 +5483,7 @@ void RenderTEAMPanel( BOOLEAN fDirty )
+ 								wcscat( pStr, sTemp );
+ 							}
+ 
+-							if (gGameOptions.fNewTraitSystem) // SANDRO - old/new traits check
+-							{
+-								UINT8 ubTempSkillArray[30];
+-								INT8 bNumSkillTraits = 0;
+-			
+-								// lets rearrange our skills to a temp array
+-								// we also get the number of lines (skills) to be displayed 
+-								for ( UINT8 ubCnt = 1; ubCnt < NUM_SKILLTRAITS_NT; ubCnt++ )
+-								{
+-									if ( ProfileHasSkillTrait( pSoldier->ubProfile, ubCnt ) == 2 )
+-									{
+-										ubTempSkillArray[bNumSkillTraits] = (ubCnt + NEWTRAIT_MERCSKILL_EXPERTOFFSET);
+-										bNumSkillTraits++;
+-									}
+-									else if ( ProfileHasSkillTrait( pSoldier->ubProfile, ubCnt ) == 1 )
+-									{
+-										ubTempSkillArray[bNumSkillTraits] = ubCnt;
+-										bNumSkillTraits++;
+-									}
+-								}
+-			
+-								if ( bNumSkillTraits == 0 )
+-								{
+-									swprintf( sTemp, L"%s", pPersonnelScreenStrings[ PRSNL_TXT_NOSKILLS ] );
+-									wcscat( pStr, sTemp );
+-								}
+-								else
+-								{
+-									for ( UINT8 ubCnt = 0; ubCnt < bNumSkillTraits; ubCnt++ )
+-									{
+-										swprintf( sTemp, L"%s\n", gzMercSkillTextNew[ ubTempSkillArray[ubCnt] ] );
+-										wcscat( pStr, sTemp );
+-									}
+-								}
+-							}
+-							else
+-							{
+-								INT8 bSkill1 = 0, bSkill2 = 0; 	
+-								bSkill1 = gMercProfiles[ pSoldier->ubProfile ].bSkillTraits[0];
+-								bSkill2 = gMercProfiles[ pSoldier->ubProfile ].bSkillTraits[1];
+-			
+-								if ( bSkill1 == 0 && bSkill2 == 0 )
+-								{
+-									swprintf( pStr, L"%s", pPersonnelScreenStrings[ PRSNL_TXT_NOSKILLS ] );
+-								}
+-								else
+-								{
+-									//if the 2 skills are the same, add the '(expert)' at the end
+-									if( bSkill1 == bSkill2 )
+-									{
+-										swprintf( pStr, L"%s %s", gzMercSkillText[bSkill1], gzMercSkillText[EXPERT] );
+-									}
+-									else
+-									{
+-										//Display the first skill
+-										if( bSkill1 != 0 )
+-										{
+-											swprintf( pStr, L"%s\n", gzMercSkillText[bSkill1] );
+-										}
+-										if( bSkill2 != 0 )
+-										{
+-											swprintf( sTemp, L"%s", gzMercSkillText[bSkill2] );
+-											wcscat( pStr, sTemp );
+-										}
+-									}
+-								}
+-							}
++							gMercProfiles[gpSMCurrentMerc->ubProfile].traits.FillHelpText( pStr );
+ 							SetRegionFastHelpText( &(gTEAM_FaceRegions[ cnt ]), pStr );
+ 						}
+ 					}
+diff --git Tactical/Items.cpp Tactical/Items.cpp
+index 8a5f488c..b78c842c 100644
+--- Tactical/Items.cpp
++++ Tactical/Items.cpp
+@@ -15535,90 +15535,6 @@ BOOLEAN ObjectIsMilitiaRelevant( OBJECTTYPE *pObj )
+ 	return FALSE;
+ }
+ 
+-FLOAT GetAttackAPTraitMultiplier( SOLDIERTYPE *pSoldier, OBJECTTYPE *pObj, UINT8 ubMode )
+-{
+-	FLOAT fMultiplier = 1.0;
+-
+-	// we shouldn't be here...
+-	if( !pSoldier || !pObj || !gGameOptions.fNewTraitSystem )
+-		return fMultiplier;
+-
+-	if( ubMode == WM_NORMAL )
+-	{
+-		if( Weapon[ pObj->usItem ].ubWeaponType == GUN_PISTOL )
+-		{
+-			fMultiplier = ( 100 - gSkillTraitValues.ubGSFiringSpeedBonusPistols * NUM_SKILL_TRAITS( pSoldier, GUNSLINGER_NT ) ) / 100.0f;
+-		}
+-		else if ( Weapon[ pObj->usItem ].ubWeaponType == GUN_SHOTGUN )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubRAFiringSpeedBonusShotguns * NUM_SKILL_TRAITS( pSoldier, RANGER_NT ) ) / 100.0f;
+-		}
+-		else if( Item[ pObj->usItem ].usItemClass == IC_BLADE )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubMEBladesAPsReduction * NUM_SKILL_TRAITS( pSoldier, MELEE_NT ) ) / 100.0f;
+-		}
+-		else if( Item[ pObj->usItem ].usItemClass == IC_PUNCH && Item[pObj->usItem].brassknuckles )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubMAPunchAPsReduction * NUM_SKILL_TRAITS( pSoldier, MARTIAL_ARTS_NT ) ) / 100.0f;
+-		}
+-		else if( Item[ pObj->usItem ].usItemClass == IC_THROWING_KNIFE )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubTHBladesAPsReduction * NUM_SKILL_TRAITS( pSoldier, THROWING_NT ) ) / 100.0f;
+-		}
+-		// grenade launchers
+-		else if( (Item[ pObj->usItem ].usItemClass == IC_LAUNCHER || Item[ pObj->usItem ].grenadelauncher) && !(Item[ pObj->usItem ].rocketlauncher) && !(Item[ pObj->usItem ].mortar) )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubHWGrenadeLaunchersAPsReduction * NUM_SKILL_TRAITS( pSoldier, HEAVY_WEAPONS_NT ) ) / 100.0f;
+-		}
+-		// rocket launchers
+-		else if( (Item[ pObj->usItem ].rocketlauncher || Item[ pObj->usItem ].singleshotrocketlauncher) && !(Item[ pObj->usItem ].mortar) )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubHWRocketLaunchersAPsReduction * NUM_SKILL_TRAITS( pSoldier, HEAVY_WEAPONS_NT ) ) / 100.0f;
+-		}
+-		// mortar
+-		else if( Item[ pObj->usItem ].mortar )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubHWMortarAPsReduction * NUM_SKILL_TRAITS( pSoldier, HEAVY_WEAPONS_NT ) + pSoldier->GetBackgroundValue(BG_ARTILLERY) ) / 100.0f;
+-		}
+-	}
+-	else if( ubMode == WM_BURST )
+-	{
+-		if( Weapon[ pObj->usItem ].ubWeaponType == GUN_PISTOL )
+-		{
+-			fMultiplier = ( 100 - gSkillTraitValues.ubGSFiringSpeedBonusPistols * NUM_SKILL_TRAITS( pSoldier, GUNSLINGER_NT ) ) / 100.0f;
+-		}
+-		else if ( Weapon[ pObj->usItem ].ubWeaponType == GUN_SHOTGUN )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubRAFiringSpeedBonusShotguns * NUM_SKILL_TRAITS( pSoldier, RANGER_NT ) ) / 100.0f;
+-		}
+-		else if ( Weapon[ pObj->usItem ].ubWeaponType == GUN_LMG )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubAWFiringSpeedBonusLMGs * NUM_SKILL_TRAITS( pSoldier, AUTO_WEAPONS_NT ) ) / 100.0f;
+-		}
+-	}
+-	else if( ubMode == WM_AUTOFIRE )
+-	{
+-		if( Weapon[ pObj->usItem ].ubWeaponType == GUN_PISTOL )
+-		{
+-			fMultiplier = ( 100 - gSkillTraitValues.ubGSFiringSpeedBonusPistols * NUM_SKILL_TRAITS( pSoldier, GUNSLINGER_NT ) ) / 100.0f;
+-		}
+-		else if ( Weapon[ pObj->usItem ].ubWeaponType == GUN_SHOTGUN )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubRAFiringSpeedBonusShotguns * NUM_SKILL_TRAITS( pSoldier, RANGER_NT ) ) / 100.0f;
+-		}
+-		else if ( Weapon[ pObj->usItem ].ubWeaponType == GUN_LMG )
+-		{
+-			fMultiplier = (100 - gSkillTraitValues.ubAWFiringSpeedBonusLMGs * NUM_SKILL_TRAITS( pSoldier, AUTO_WEAPONS_NT ) ) / 100.0f;
+-		}
+-	}
+-	else if( ubMode == WM_ATTACHED_GL || ubMode == WM_ATTACHED_GL_BURST || ubMode == WM_ATTACHED_GL_AUTO )
+-	{
+-		fMultiplier = (100 - gSkillTraitValues.ubHWGrenadeLaunchersAPsReduction * NUM_SKILL_TRAITS( pSoldier, HEAVY_WEAPONS_NT ) ) / 100.0f;
+-	}
+-
+-	return fMultiplier;
+-}
+-
+ // check if item is grenade and it can use delayed explosion
+ BOOLEAN CanDelayGrenadeExplosion( UINT16 usItem )
+ {
+diff --git Tactical/Items.h Tactical/Items.h
+index 847eb219..325c611b 100644
+--- Tactical/Items.h
++++ Tactical/Items.h
+@@ -554,8 +554,6 @@ void AttachDefaultAttachments(OBJECTTYPE *pObj, BOOLEAN fAllDefaultAttachments=T
+ // Flugente: is this object useable by militia?
+ BOOLEAN ObjectIsMilitiaRelevant( OBJECTTYPE *pObj );
+ 
+-FLOAT GetAttackAPTraitMultiplier( SOLDIERTYPE *pSoldier, OBJECTTYPE *pObj, UINT8 ubMode);
+-
+ // sevenfm: check if this type of grenade can use delayed mode
+ BOOLEAN CanDelayGrenadeExplosion( UINT16 usItem );
+ 
+diff --git Tactical/Morale.cpp Tactical/Morale.cpp
+index 5a106cbd..490ce45d 100644
+--- Tactical/Morale.cpp
++++ Tactical/Morale.cpp
+@@ -1545,7 +1545,7 @@ void RememberSnitchableEvent( UINT8 ubTargetProfile, UINT8 ubSecondaryTargetProf
+ 	{
+ 		ubSnitchProfile = pSnitch->ubProfile;
+ 		// skip past ourselves and all inactive mercs
+-		if ( ProfileHasSkillTrait( ubSnitchProfile, SNITCH_NT ) &&
++		if ( gMercProfiles[ubSnitchProfile].traits.ProfileNTraitLevel( SNITCH_NT ) &&
+ 			ubSnitchProfile != ubTargetProfile && ubSnitchProfile != ubSecondaryTargetProfile
+ 			&& pSnitch->bActive && ubSnitchProfile != NO_PROFILE &&
+ 			!(pSnitch->bAssignment == IN_TRANSIT ||
+diff --git Tactical/Points.cpp Tactical/Points.cpp
+index c30239a0..45302572 100644
+--- Tactical/Points.cpp
++++ Tactical/Points.cpp
+@@ -2452,7 +2452,7 @@ INT16 MinAPsToShootOrStab(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT16 bAimTime,
+ 		if ( HAS_SKILL_TRAIT( pSoldier, HEAVY_WEAPONS_NT ) && gGameOptions.fNewTraitSystem )
+ 		{
+ //			bAPCost = (INT16)((bAPCost * (100 - gSkillTraitValues.ubHWGrenadeLaunchersAPsReduction * NUM_SKILL_TRAITS( pSoldier, HEAVY_WEAPONS_NT ) ) / 100)+ 0.5); 
+-			bAPCost = (INT16)(bAPCost * GetAttackAPTraitMultiplier( pSoldier, pObjUsed, pSoldier->bWeaponMode ) + 0.5f);
++			bAPCost = (INT16)(bAPCost * pSoldier->traits.GetAttackAPMultiplier( pObjUsed, pSoldier->bWeaponMode ) + 0.5f);
+ 		}
+ 	}
+ 	else if ( pSoldier->IsValidSecondHandShot( ) )
+@@ -2462,8 +2462,8 @@ INT16 MinAPsToShootOrStab(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT16 bAimTime,
+ 		// SANDRO - gunslinger check for firing speed
+ //		if ( HAS_SKILL_TRAIT( pSoldier, GUNSLINGER_NT ) && gGameOptions.fNewTraitSystem )
+ //		{
+-			INT16 bcst1 = (INT16)(BaseAPsToShootOrStab( bFullAPs, bAimSkill, &(pSoldier->inv[HANDPOS]), pSoldier ) * GetAttackAPTraitMultiplier( pSoldier, pObjUsed, pSoldier->bWeaponMode ) + 0.5f);
+-			INT16 bcst2 = (INT16)(BaseAPsToShootOrStab( bFullAPs, bAimSkill, &(pSoldier->inv[SECONDHANDPOS]), pSoldier ) * GetAttackAPTraitMultiplier( pSoldier, pSecondObjUsed, pSoldier->bWeaponMode ) + 0.5f);
++			INT16 bcst1 = (INT16)(BaseAPsToShootOrStab( bFullAPs, bAimSkill, &(pSoldier->inv[HANDPOS]), pSoldier ) * pSoldier->traits.GetAttackAPMultiplier( pObjUsed, pSoldier->bWeaponMode ) + 0.5f);
++			INT16 bcst2 = (INT16)(BaseAPsToShootOrStab( bFullAPs, bAimSkill, &(pSoldier->inv[SECONDHANDPOS]), pSoldier ) * pSoldier->traits.GetAttackAPMultiplier( pSecondObjUsed, pSoldier->bWeaponMode ) + 0.5f);
+ //			if ( Weapon[ usItem ].ubWeaponType == GUN_PISTOL )
+ //				bcst1 = (INT16)((bcst1 * ( 100 - gSkillTraitValues.ubGSFiringSpeedBonusPistols) / 100)+ 0.5);
+ //			if ( Weapon[ pSoldier->inv[SECONDHANDPOS].usItem ].ubWeaponType == GUN_PISTOL ) 
+@@ -2501,7 +2501,7 @@ INT16 MinAPsToShootOrStab(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT16 bAimTime,
+ 		if ( gGameOptions.fNewTraitSystem )
+ 		{
+ 			// silversurfer: new function to handle all modifiers
+-			bAPCost = (INT16)(bAPCost * GetAttackAPTraitMultiplier( pSoldier, pObjUsed, pSoldier->bWeaponMode ) + 0.5f);
++			bAPCost = (INT16)(bAPCost * pSoldier->traits.GetAttackAPMultiplier( pObjUsed, pSoldier->bWeaponMode ) + 0.5f);
+ 
+ /*			// Decreased APs needed for LMG - Auto Weapons
+ 			if (Weapon[usUBItem].ubWeaponType == GUN_LMG && (pSoldier->bDoBurst || pSoldier->bDoAutofire) && ( HAS_SKILL_TRAIT( pSoldier, AUTO_WEAPONS_NT ) ) )
+diff --git Tactical/Soldier Ani.cpp Tactical/Soldier Ani.cpp
+index e6d823d9..803fe699 100644
+--- Tactical/Soldier Ani.cpp	
++++ Tactical/Soldier Ani.cpp	
+@@ -1248,26 +1248,7 @@ BOOLEAN AdjustToNextAnimationFrame( SOLDIERTYPE *pSoldier )
+ 
+ 					// Are we a martial artist?
+ 					{
+-						BOOLEAN fMartialArtist = FALSE;
+-
+-						if ( pSoldier->ubProfile != NO_PROFILE && pSoldier->ubBodyType == REGMALE ) // SANDRO - added check for body type
+-						{
+-							// SANDRO - old/new traits
+-							if (gGameOptions.fNewTraitSystem)
+-							{
+-								if ( NUM_SKILL_TRAITS( pSoldier, MARTIAL_ARTS_NT ) >= ((gSkillTraitValues.fPermitExtraAnimationsOnlyToMA) ? 2 : 1 ) )
+-								{
+-									fMartialArtist = TRUE;
+-								}
+-							}
+-							else
+-							{
+-								if ( ProfileHasSkillTrait( pSoldier->ubProfile, MARTIALARTS_OT ) > 0 )
+-								{
+-									fMartialArtist = TRUE;
+-								}
+-							}
+-						}
++						BOOLEAN fMartialArtist = pSoldier->traits.HasMartialArtistSpecialAnimation();
+ 
+ 						if ( gAnimControl[ pSoldier->usAnimState ].ubHeight == ANIM_CROUCH )
+ 						{
+diff --git Tactical/Soldier Control.cpp Tactical/Soldier Control.cpp
+index 20a02a74..622496a8 100644
+--- Tactical/Soldier Control.cpp	
++++ Tactical/Soldier Control.cpp	
+@@ -1066,7 +1066,8 @@ SOLDIERTYPE::~SOLDIERTYPE( )
+ 		delete ai_masterplan_;
+ }
+ 
+-SOLDIERTYPE::SOLDIERTYPE( ) {
++SOLDIERTYPE::SOLDIERTYPE( ) : traits( this )
++{
+ 	initialize( );
+ }
+ 
+@@ -1271,13 +1272,13 @@ OLD_MERCPROFILESTRUCT_101::OLD_MERCPROFILESTRUCT_101( )
+ 	memset( this, 0, SIZEOF_OLD_MERCPROFILESTRUCT_101_POD );
+ }
+ 
+-MERCPROFILESTRUCT::MERCPROFILESTRUCT( )
++MERCPROFILESTRUCT::MERCPROFILESTRUCT( ) : traits( this )
+ {
+ 	initialize( );
+ }
+ 
+ // Copy Constructor
+-MERCPROFILESTRUCT::MERCPROFILESTRUCT( const MERCPROFILESTRUCT& src )
++MERCPROFILESTRUCT::MERCPROFILESTRUCT( const MERCPROFILESTRUCT& src ) : traits( this )
+ {
+ 	memcpy( this, &src, SIZEOF_MERCPROFILESTRUCT_POD );
+ 	inv = src.inv;
+@@ -6046,12 +6047,8 @@ void SOLDIERTYPE::EVENT_SoldierGotHit( UINT16 usWeaponIndex, INT16 sDamage, INT1
+ 					sBreathLoss = sDamage * (100 + gSkillTraitValues.bPercentModifierHtHBreathLoss); // 80% only for untrained mercs
+ 
+ 					// martial arts bonus for breath damage
+-					if ( HAS_SKILL_TRAIT( MercPtrs[ubAttackerID], MARTIAL_ARTS_NT ) )
+-					{
+-						sBreathLoss += sDamage * gSkillTraitValues.ubMABonusBreathDamageHandToHand * NUM_SKILL_TRAITS( MercPtrs[ubAttackerID], MARTIAL_ARTS_NT );
+-
+-						sBreathRegainPenaltyMultiplier += (gSkillTraitValues.usMALostBreathRegainPenalty * NUM_SKILL_TRAITS( MercPtrs[ubAttackerID], MARTIAL_ARTS_NT ));
+-					}
++					sBreathLoss += sDamage * MercPtrs[ubAttackerID]->traits.ubMABonusBreathDamageHandToHand();
++					sBreathRegainPenaltyMultiplier += MercPtrs[ubAttackerID]->traits.usMALostBreathRegainPenalty();
+ 				}
+ 				else
+ 				{
+@@ -6067,10 +6064,7 @@ void SOLDIERTYPE::EVENT_SoldierGotHit( UINT16 usWeaponIndex, INT16 sDamage, INT1
+ 				sBreathLoss = sDamage * (100 + gSkillTraitValues.bPercentModifierHtHBreathLoss);
+ 			}
+ 			// bodybuilding reduces this to half
+-			if ( HAS_SKILL_TRAIT( this, BODYBUILDING_NT ) )
+-			{
+-				sBreathLoss = max( 10, (sBreathLoss * (100 - gSkillTraitValues.ubBBBreathLossForHtHImpactReduction) / 100) );
+-			}
++			sBreathLoss = max( 10, ( sBreathLoss * ( 100 - traits.ubBBBreathLossForHtHImpactReduction() ) / 100 ) );
+ 		}
+ 		else
+ 		{
+@@ -7723,8 +7717,8 @@ void EVENT_InternalSetSoldierDesiredDirection( SOLDIERTYPE *pSoldier, UINT8	ubNe
+ 				break;
+ 			}
+ 			// martial artists can turn faster
+-			if ( HAS_SKILL_TRAIT( pSoldier, MARTIAL_ARTS_NT ) && gGameOptions.fNewTraitSystem )
+-				sAPCost = max( 1, (INT16)(sAPCost * (100 - gSkillTraitValues.ubMAApsTurnAroundReduction * NUM_SKILL_TRAITS( pSoldier, MARTIAL_ARTS_NT )) / 100.0f + 0.5f) );
++			if ( gGameOptions.fNewTraitSystem )
++				sAPCost = max( 1, (INT16)(sAPCost * (100 - pSoldier->traits.ubMAApsTurnAroundReduction()) / 100.0f + 0.5f) );
+ 
+ 			// SANDRO: get BP cost for weapon manipulating
+ 			if ( gGameExternalOptions.ubEnergyCostForWeaponWeight )
+@@ -9199,10 +9193,10 @@ void CalculateSoldierAniSpeed( SOLDIERTYPE *pSoldier, SOLDIERTYPE *pStatsSoldier
+ 		// ATE: If realtime, and stealth mode...
+ 		if ( pStatsSoldier->bStealthMode )
+ 		{
+-			if ( gGameOptions.fNewTraitSystem && HAS_SKILL_TRAIT( pSoldier, STEALTHY_NT ) )
++			if ( gGameOptions.fNewTraitSystem )
+ 			{
+ 				// Stealthy skill decreases movement speed penalty while on stealthy mode - SANDRO
+-				pSoldier->sAniDelay = (INT16)((pSoldier->sAniDelay * (200 - gSkillTraitValues.ubSTStealthModeSpeedBonus)) / 100);
++				pSoldier->sAniDelay = (INT16)((pSoldier->sAniDelay * (200 - pSoldier->traits.ubSTStealthModeSpeedBonus())) / 100);
+ 			}
+ 			else // original
+ 			{
+@@ -9213,10 +9207,7 @@ void CalculateSoldierAniSpeed( SOLDIERTYPE *pSoldier, SOLDIERTYPE *pStatsSoldier
+ 		// SANDRO - STOMP traits - bonus to movement speed for Athletics
+ 		if ( gGameOptions.fNewTraitSystem && (gAnimControl[pSoldier->usAnimState].uiFlags & ANIM_MOVING) )
+ 		{
+-			if ( HAS_SKILL_TRAIT( pSoldier, ATHLETICS_NT ) )
+-			{
+-				pSoldier->sAniDelay = (INT16)(pSoldier->sAniDelay * (100 - min( 75, gSkillTraitValues.ubATAPsMovementReduction )) / 100);
+-			}
++			pSoldier->sAniDelay = (INT16)( pSoldier->sAniDelay * ( 100 - min( 75, pSoldier->traits.ubATAPsMovementReduction() ) ) / 100 );
+ 		}
+ 
+ 		//pSoldier->sAniDelay = pSoldier->sAniDelay * ( 1 * gTacticalStatus.bRealtimeSpeed / 2 );
+@@ -12723,17 +12714,13 @@ void SOLDIERTYPE::EVENT_SoldierBeginPunchAttack( INT32 sGridNo, UINT8 ubDirectio
+ 	}
+ 
+ 	// Are we a martial artist? - SANDRO - added new/old traits check
+-	if ( ((NUM_SKILL_TRAITS( this, MARTIAL_ARTS_NT ) >= ((gSkillTraitValues.fPermitExtraAnimationsOnlyToMA) ? 2 : 1)) && gGameOptions.fNewTraitSystem) ||
+-		 (HAS_SKILL_TRAIT( this, MARTIALARTS_OT ) && !gGameOptions.fNewTraitSystem) )
+-	{
+-		fMartialArtist = TRUE;
+-	}
++	fMartialArtist = traits.HasMartialArtistSpecialAnimation();
+ 
+ 	//Ja25 No meanwhiles
+ #ifdef JA2UB
+ 	if ( fMartialArtist && !Item[usItem].crowbar && this->ubBodyType == REGMALE )
+ #else
+-	if ( fMartialArtist && !AreInMeanwhile( ) && !Item[usItem].crowbar && this->ubBodyType == REGMALE && !IsZombie( ) ) // SANDRO - added check for body type
++	if ( fMartialArtist && !AreInMeanwhile( ) && !Item[usItem].crowbar && !IsZombie( ) )
+ #endif
+ 	{
+ 		// Are we in attack mode yet?
+@@ -12991,7 +12978,7 @@ void SOLDIERTYPE::EVENT_SoldierBeginKnifeThrowAttack( INT32 sGridNo, UINT8 ubDir
+ 	DebugAttackBusy( String( "Begin knife throwing attack: ATB  %d\n", gTacticalStatus.ubAttackBusyCount ) );
+ 
+ 	// SANDRO - new animation for throwing for big mercs by PasHancock
+-	if ( this->ubBodyType == BIGMALE && (DoesMercHavePersonality( this, CHAR_TRAIT_SHOWOFF ) || (HAS_SKILL_TRAIT( this, THROWING_NT ) && gGameOptions.fNewTraitSystem) || (HAS_SKILL_TRAIT( this, THROWING_OT ) && !gGameOptions.fNewTraitSystem)))
++	if ( this->ubBodyType == BIGMALE && (DoesMercHavePersonality( this, CHAR_TRAIT_SHOWOFF ) || traits.HasThrowingSpecialAnimation()))
+ 	{
+ 		this->EVENT_InitNewSoldierAnim( THROW_KNIFE_SP_BM, 0, FALSE );
+ 	}
+@@ -13102,7 +13089,7 @@ void SOLDIERTYPE::EVENT_SoldierBeginFirstAid( INT32 sGridNo, UINT8 ubDirection )
+ 
+ 		//SANDRO - hack! Find out if we are a doctor with medical bag trying to make a surgery
+ 		this->fDoingSurgery = FALSE;
+-		if ( (NUM_SKILL_TRAITS( this, DOCTOR_NT ) >= gSkillTraitValues.ubDONumberTraitsNeededForSurgery) && Item[this->inv[HANDPOS].usItem].medicalkit && gGameOptions.fNewTraitSystem )
++		if ( traits.HasRequiredNumberOfTraitsNeededForSurgery() && Item[this->inv[HANDPOS].usItem].medicalkit && gGameOptions.fNewTraitSystem )
+ 		{
+ 			if ( ((pTSoldier->bTeam == OUR_TEAM) || (pTSoldier->bTeam == MILITIA_TEAM))
+ 				 && (IS_MERC_BODY_TYPE( pTSoldier ) || IS_CIV_BODY_TYPE( pTSoldier ))
+@@ -13266,7 +13253,7 @@ UINT32 SOLDIERTYPE::SoldierDressWound( SOLDIERTYPE *pVictim, INT16 sKitPts, INT1
+ 	// if we are going to do the surgery
+ 	// Flugente: AI medics are allowed to perform surgery without first aid kits, and can do this on themselves
+ 	if ( pVictim->iHealableInjury > 0 && this->fDoingSurgery && (this->ubID != pVictim->ubID || (gGameExternalOptions.fEnemyMedicsHealSelf && this->bTeam == ENEMY_TEAM))
+-		 && gGameOptions.fNewTraitSystem && (NUM_SKILL_TRAITS( this, DOCTOR_NT ) >= gSkillTraitValues.ubDONumberTraitsNeededForSurgery)
++		 && traits.HasRequiredNumberOfTraitsNeededForSurgery()
+ 		 && (Item[this->inv[HANDPOS].usItem].medicalkit || this->bTeam == ENEMY_TEAM) )
+ 	{
+ 		fOnSurgery = TRUE;
+@@ -13322,10 +13309,9 @@ UINT32 SOLDIERTYPE::SoldierDressWound( SOLDIERTYPE *pVictim, INT16 sKitPts, INT1
+ 	}
+ 
+ 	// Doctor trait improves basic bandaging ability
+-	if ( !(fOnSurgery) && gGameOptions.fNewTraitSystem && HAS_SKILL_TRAIT( this, DOCTOR_NT ) )
++	if ( !(fOnSurgery) && gGameOptions.fNewTraitSystem )
+ 	{
+-		uiPossible = uiPossible * (100 - gSkillTraitValues.bSpeedModifierBandaging) / 100;
+-		uiPossible += (uiPossible * gSkillTraitValues.ubDOBandagingSpeedPercent * NUM_SKILL_TRAITS( this, DOCTOR_NT ) + this->GetBackgroundValue( BG_PERC_BANDAGING )) / 100;
++		uiPossible = ( uiPossible * traits.BandagingSpeedFactorInPercent() + this->GetBackgroundValue( BG_PERC_BANDAGING ) ) / 100;
+ 	}
+ 
+ 	uiActual = uiPossible;		// start by assuming maximum possible
+@@ -13463,7 +13449,7 @@ UINT32 SOLDIERTYPE::SoldierDressWound( SOLDIERTYPE *pVictim, INT16 sKitPts, INT1
+ 		// find out if we will repair any stats...
+ 		if ( NumberOfDamagedStats( pVictim ) > 0 )
+ 		{
+-			usReturnDamagedStatRate = ((gSkillTraitValues.usDORepairStatsRateBasic + gSkillTraitValues.usDORepairStatsRateOnTop * NUM_SKILL_TRAITS( this, DOCTOR_NT )));
++			usReturnDamagedStatRate = ((gSkillTraitValues.usDORepairStatsRateBasic + traits.usDORepairStatsRateOnTop()));
+ 			usReturnDamagedStatRate -= max( 0, ((usReturnDamagedStatRate * gSkillTraitValues.ubDORepStPenaltyIfAlsoHealing) / 100) );
+ 
+ 			// ... in which case, reduce the points
+@@ -13476,9 +13462,9 @@ UINT32 SOLDIERTYPE::SoldierDressWound( SOLDIERTYPE *pVictim, INT16 sKitPts, INT1
+ 		if ( ubPtsLeft >= (pVictim->iHealableInjury / 100) )
+ 		{
+ 			if ( this->usSoldierFlagMask2 & SOLDIER_SURGERY_BOOSTED )
+-				usLifeReturned = pVictim->iHealableInjury * ( gSkillTraitValues.ubDOSurgeryHealPercentBase + gSkillTraitValues.ubDOSurgeryHealPercentBloodbag + gSkillTraitValues.ubDOSurgeryHealPercentOnTop * NUM_SKILL_TRAITS( this, DOCTOR_NT ) ) / 100;
++				usLifeReturned = pVictim->iHealableInjury * ( gSkillTraitValues.ubDOSurgeryHealPercentBase + gSkillTraitValues.ubDOSurgeryHealPercentBloodbag + traits.ubDOSurgeryHealPercentOnTop() ) / 100;
+ 			else
+-				usLifeReturned = pVictim->iHealableInjury * (gSkillTraitValues.ubDOSurgeryHealPercentBase + gSkillTraitValues.ubDOSurgeryHealPercentOnTop * NUM_SKILL_TRAITS( this, DOCTOR_NT )) / 100;
++				usLifeReturned = pVictim->iHealableInjury * (gSkillTraitValues.ubDOSurgeryHealPercentBase + traits.ubDOSurgeryHealPercentOnTop()) / 100;
+ 
+ 			pVictim->iHealableInjury = 0;
+ 			//CHRISL: Why would we arbitrarily use all ubPtsLeft when a victim isn't bleeding?  And why would the medical bag, which we have to use in order to 
+@@ -13516,9 +13502,9 @@ UINT32 SOLDIERTYPE::SoldierDressWound( SOLDIERTYPE *pVictim, INT16 sKitPts, INT1
+ 		else
+ 		{
+ 			if ( this->usSoldierFlagMask2 & SOLDIER_SURGERY_BOOSTED )
+-				usLifeReturned = ubPtsLeft * ( gSkillTraitValues.ubDOSurgeryHealPercentBase + gSkillTraitValues.ubDOSurgeryHealPercentBloodbag + gSkillTraitValues.ubDOSurgeryHealPercentOnTop * NUM_SKILL_TRAITS( this, DOCTOR_NT ) );
++				usLifeReturned = ubPtsLeft * ( gSkillTraitValues.ubDOSurgeryHealPercentBase + gSkillTraitValues.ubDOSurgeryHealPercentBloodbag + traits.ubDOSurgeryHealPercentOnTop() );
+ 			else
+-				usLifeReturned = ubPtsLeft * (gSkillTraitValues.ubDOSurgeryHealPercentBase + gSkillTraitValues.ubDOSurgeryHealPercentOnTop * NUM_SKILL_TRAITS( this, DOCTOR_NT ));
++				usLifeReturned = ubPtsLeft * (gSkillTraitValues.ubDOSurgeryHealPercentBase + traits.ubDOSurgeryHealPercentOnTop() );
+ 
+ 			pVictim->iHealableInjury -= (ubPtsLeft * 100);
+ 			ubPtsLeft = 0;
+@@ -14916,8 +14902,8 @@ INT32 SOLDIERTYPE::GetDamageResistance( BOOLEAN fAutoResolve, BOOLEAN fCalcBreat
+ 
+ 	////////////////////////////////////////////////////////////////////////////////////
+ 	// STOMP traits - Bodybuilding damage resistance
+-	if ( gGameOptions.fNewTraitSystem && HAS_SKILL_TRAIT( this, BODYBUILDING_NT ) )
+-		resistance += gSkillTraitValues.ubBBDamageResistance;
++	if ( gGameOptions.fNewTraitSystem)
++		resistance += traits.ubBBDamageResistance();
+ 	////////////////////////////////////////////////////////////////////////////////////
+ 
+ 	// Flugente: drugs can now have an effect on damage resistance
+@@ -17094,9 +17080,7 @@ INT8 SOLDIERTYPE::GetTraitCTHModifier( UINT16 usItem, INT16 ubAimTime, UINT8 ubT
+ 		if ( Item[usItem].rocketlauncher || Item[usItem].singleshotrocketlauncher )
+ 		{
+ 			modifier += gSkillTraitValues.bCtHModifierRocketLaunchers; // -25% for untrained mercs !!!
+-
+-			if ( HAS_SKILL_TRAIT( this, HEAVY_WEAPONS_NT ) )
+-				modifier += gSkillTraitValues.ubHWBonusCtHRocketLaunchers * NUM_SKILL_TRAITS( this, HEAVY_WEAPONS_NT ); // +25% per trait
++			modifier += traits.ubHWBonusCtHRocketLaunchers(); // +25% per trait
+ 		}
+ 		// Added CtH bonus for Gunslinger trait on pistols and machine-pistols
+ 		else if ( Weapon[usItem].ubWeaponType == GUN_PISTOL )
+@@ -17104,38 +17088,32 @@ INT8 SOLDIERTYPE::GetTraitCTHModifier( UINT16 usItem, INT16 ubAimTime, UINT8 ubT
+ 			modifier += gSkillTraitValues.bCtHModifierPistols; // -5% for untrained mercs.
+ 
+ 			// this bonus is applied only on single shots!
+-			if ( HAS_SKILL_TRAIT( this, GUNSLINGER_NT ) && this->bDoBurst == 0 && this->bDoAutofire == 0 )
+-				modifier += gSkillTraitValues.ubGSBonusCtHPistols * NUM_SKILL_TRAITS( this, GUNSLINGER_NT ); // +10% per trait
++			if (this->bDoBurst == 0 && this->bDoAutofire == 0 )
++				modifier += traits.ubGSBonusCtHPistols(); // +10% per trait
+ 		}
+ 		else if ( Weapon[usItem].ubWeaponType == GUN_M_PISTOL )
+ 		{
+ 			modifier += gSkillTraitValues.bCtHModifierMachinePistols; // -5% for untrained mercs.
+ 
+ 			// this bonus is applied only on single shots!
+-			if ( HAS_SKILL_TRAIT( this, GUNSLINGER_NT ) && ((this->bDoBurst == 0 && this->bDoAutofire == 0) || !gSkillTraitValues.ubGSCtHMPExcludeAuto) )
+-				modifier += gSkillTraitValues.ubGSBonusCtHMachinePistols * NUM_SKILL_TRAITS( this, GUNSLINGER_NT ); // +5% per trait
++			if ( (this->bDoBurst == 0 && this->bDoAutofire == 0) || !gSkillTraitValues.ubGSCtHMPExcludeAuto )
++				modifier += traits.ubGSBonusCtHMachinePistols(); // +5% per trait
+ 		}
+ 		// Added CtH bonus for Machinegunner skill on assault rifles, SMGs and LMGs
+ 		else if ( Weapon[usItem].ubWeaponType == GUN_AS_RIFLE )
+ 		{
+ 			modifier += gSkillTraitValues.bCtHModifierAssaultRifles; // -5% for untrained mercs.
+-
+-			if ( HAS_SKILL_TRAIT( this, AUTO_WEAPONS_NT ) )
+-				modifier += gSkillTraitValues.ubAWBonusCtHAssaultRifles * NUM_SKILL_TRAITS( this, AUTO_WEAPONS_NT ); // +5% per trait
++			modifier += traits.ubAWBonusCtHAssaultRifles(); // +5% per trait
+ 		}
+ 		else if ( Weapon[usItem].ubWeaponType == GUN_SMG )
+ 		{
+ 			modifier += gSkillTraitValues.bCtHModifierSMGs; // -5% for untrained mercs.
+-
+-			if ( HAS_SKILL_TRAIT( this, AUTO_WEAPONS_NT ) )
+-				modifier += gSkillTraitValues.ubAWBonusCtHSMGs * NUM_SKILL_TRAITS( this, AUTO_WEAPONS_NT ); // +5% per trait
++			modifier += traits.ubAWBonusCtHSMGs(); // +5% per trait
+ 		}
+ 		else if ( Weapon[usItem].ubWeaponType == GUN_LMG )
+ 		{
+ 			modifier += gSkillTraitValues.bCtHModifierLMGs; // -10% for untrained mercs.
+-
+-			if ( HAS_SKILL_TRAIT( this, AUTO_WEAPONS_NT ) )
+-				modifier += gSkillTraitValues.ubAWBonusCtHLMGs * NUM_SKILL_TRAITS( this, AUTO_WEAPONS_NT ); // +5% per trait
++			modifier += traits.ubAWBonusCtHLMGs(); // +5% per trait
+ 		}
+ 		// Added CtH bonus for Gunslinger trait on pistols and machine-pistols
+ 		else if ( Weapon[usItem].ubWeaponType == GUN_SN_RIFLE )
+@@ -17143,8 +17121,8 @@ INT8 SOLDIERTYPE::GetTraitCTHModifier( UINT16 usItem, INT16 ubAimTime, UINT8 ubT
+ 			modifier += gSkillTraitValues.bCtHModifierSniperRifles; // -5% for untrained mercs.
+ 
+ 			// this bonus is applied only on single shots!
+-			if ( HAS_SKILL_TRAIT( this, SNIPER_NT ) && this->bDoBurst == 0 && this->bDoAutofire == 0 )
+-				modifier += gSkillTraitValues.ubSNBonusCtHSniperRifles * NUM_SKILL_TRAITS( this, SNIPER_NT ); // +5% per trait
++			if ( this->bDoBurst == 0 && this->bDoAutofire == 0 )
++				modifier += traits.ubSNBonusCtHSniperRifles(); // +5% per trait
+ 		}
+ 		// Added CtH bonus for Ranger skill on rifles and shotguns
+ 		else if ( Weapon[usItem].ubWeaponType == GUN_RIFLE )
+@@ -17152,28 +17130,24 @@ INT8 SOLDIERTYPE::GetTraitCTHModifier( UINT16 usItem, INT16 ubAimTime, UINT8 ubT
+ 			modifier += gSkillTraitValues.bCtHModifierRifles; // -5% for untrained mercs.
+ 
+ 			// this bonus is applied only on single shots!
+-			if ( HAS_SKILL_TRAIT( this, RANGER_NT ) && this->bDoBurst == 0 && this->bDoAutofire == 0 )
+-				modifier += gSkillTraitValues.ubRABonusCtHRifles * NUM_SKILL_TRAITS( this, RANGER_NT ); // +5% per trait
++			if ( this->bDoBurst == 0 && this->bDoAutofire == 0 )
++				modifier += traits.ubRABonusCtHRifles(); // +5% per trait
+ 			//CHRISL: Why wouldn't sniper training include standard rifles which are often used as "poor-man sniper rifles"
+ 			// this bonus is applied only on single shots!
+-			if ( HAS_SKILL_TRAIT( this, SNIPER_NT ) && this->bDoBurst == 0 && this->bDoAutofire == 0 )
+-				modifier += gSkillTraitValues.ubSNBonusCtHRifles * NUM_SKILL_TRAITS( this, SNIPER_NT ); // +5% per trait
++			if ( this->bDoBurst == 0 && this->bDoAutofire == 0 )
++				modifier += traits.ubSNBonusCtHRifles(); // +5% per trait
+ 		}
+ 		else if ( Weapon[usItem].ubWeaponType == GUN_SHOTGUN )
+ 		{
+ 			modifier += gSkillTraitValues.bCtHModifierShotguns; // -5% for untrained mercs.
+-
+-			if ( HAS_SKILL_TRAIT( this, RANGER_NT ) )
+-				modifier += gSkillTraitValues.ubRABonusCtHShotguns * NUM_SKILL_TRAITS( this, RANGER_NT ); // +10% per trait
++			modifier += traits.ubRABonusCtHShotguns(); // +10% per trait
+ 		}
+ 
+ 		// Added small CtH penalty for robot if controller hasn't the Technician trait
+ 		if ( AM_A_ROBOT( this ) )
+ 		{
+-			modifier += gSkillTraitValues.bCtHModifierRobot; // -10% 
+-
+-			if ( HAS_SKILL_TRAIT( this->GetRobotController( ), TECHNICIAN_NT ) )
+-				modifier += gSkillTraitValues.ubTECtHControlledRobotBonus * NUM_SKILL_TRAITS( this->GetRobotController( ), TECHNICIAN_NT ); // +10% per trait
++			modifier += gSkillTraitValues.bCtHModifierRobot; // -10%
++			modifier += GetRobotController()->traits.ubTECtHControlledRobotBonus(); // +10% per trait
+ 		}
+ 
+ 		// Added character traits influence
+@@ -17806,9 +17780,7 @@ BOOLEAN	SOLDIERTYPE::CanUseSkill( INT8 iSkill, BOOLEAN fAPCheck, INT32 sGridNo )
+ 
+ 	case SKILLS_FOCUS:
+ 		// requires sniper trait, an aimed gun and only works on gridnos in our direction
+-		if ( gGameOptions.fNewTraitSystem && 
+-			 (HAS_SKILL_TRAIT( this, AUTO_WEAPONS_NT ) || HAS_SKILL_TRAIT( this, HEAVY_WEAPONS_NT ) || HAS_SKILL_TRAIT( this, SNIPER_NT ) || 
+-			 HAS_SKILL_TRAIT( this, RANGER_NT ) || HAS_SKILL_TRAIT( this, GUNSLINGER_NT ))
++		if ( traits.HasFocus()
+ 			 && this->inv[HANDPOS].exists( ) && Item[this->inv[HANDPOS].usItem].usItemClass & (IC_GUN | IC_LAUNCHER) && WeaponReady( this )
+ 			 && sGridNo != NOWHERE && this->ubDirection == GetDirectionFromGridNo( sGridNo, this ) )
+ 			canuse = TRUE;
+@@ -19444,8 +19416,7 @@ INT16	SOLDIERTYPE::GetDiseaseResistance( )
+ 	// Flugente: resistance can per definition only be between -100 and 100 (at least that's my definition)
+ 	INT16 val = 0;
+ 
+-	if ( HAS_SKILL_TRAIT( this, SURVIVAL_NT ) )
+-		val += gSkillTraitValues.usSVDiseaseResistance;
++	val += traits.usSVDiseaseResistance();
+ 
+ 	val += this->GetBackgroundValue( BG_RESI_DISEASE );
+ 
+@@ -19771,8 +19742,7 @@ UINT8	SOLDIERTYPE::GetWaterSnakeDefenseChance()
+ 	// base evasion chance is 5%
+ 	INT16 val = 5;
+ 
+-	if ( gGameOptions.fNewTraitSystem )
+-		val += gSkillTraitValues.usSVSnakeDefense * NUM_SKILL_TRAITS( this, SURVIVAL_NT );
++	val += traits.usSVSnakeDefense();
+ 
+ 	val += this->GetBackgroundValue( BG_SNAKEDEFENSE );
+ 
+@@ -20193,8 +20163,8 @@ FLOAT		SOLDIERTYPE::GetIntelGain()
+ 	// 20% snitch trait
+ 	UINT32 val = 5 * EffectiveWisdom( this )
+ 		+ 10 * EffectiveExpLevel ( this, FALSE ) 
+-		+ 50 * NUM_SKILL_TRAITS( this, SCOUTING_NT ) 
+-		+ 75 * NUM_SKILL_TRAITS( this, COVERT_NT ) 
++		+ 50 * NUM_SKILL_TRAITS( this, SCOUTING_NT )
++		+ 75 * NUM_SKILL_TRAITS( this, COVERT_NT )
+ 		+ 200 * NUM_SKILL_TRAITS( this, SNITCH_NT );
+ 
+ 	ReducePointsForFatigue( this, &val );
+@@ -21399,16 +21369,8 @@ void SOLDIERTYPE::EVENT_SoldierHandcuffPerson( INT32 sGridNo, UINT8 ubDirection
+ 			UINT32 attackrating = 10 * EffectiveExpLevel( this ) + EffectiveStrength( this, FALSE ) + 2 * EffectiveDexterity( this, FALSE ) + EffectiveAgility( this, FALSE );
+ 			UINT32 defenserating = 10 * EffectiveExpLevel( pSoldier ) + 2 * EffectiveStrength( pSoldier, FALSE ) + 2 * EffectiveDexterity( pSoldier, FALSE ) + 2 * EffectiveAgility( pSoldier, FALSE );
+ 
+-			if ( gGameOptions.fNewTraitSystem )
+-			{
+-				attackrating += 25 * NUM_SKILL_TRAITS( this, MARTIAL_ARTS_NT ) + 10 * HAS_SKILL_TRAIT( this, MELEE_NT );
+-				defenserating += 25 * NUM_SKILL_TRAITS( pSoldier, MARTIAL_ARTS_NT ) + 10 * HAS_SKILL_TRAIT( pSoldier, MELEE_NT );
+-			}
+-			else
+-			{
+-				attackrating += 25 * NUM_SKILL_TRAITS( this, MARTIALARTS_OT ) + 25 * NUM_SKILL_TRAITS( this, HANDTOHAND_OT ) + 10 * HAS_SKILL_TRAIT( this, KNIFING_OT );
+-				defenserating += 25 * NUM_SKILL_TRAITS( pSoldier, MARTIALARTS_OT ) + 25 * NUM_SKILL_TRAITS( pSoldier, HANDTOHAND_OT ) + 10 * HAS_SKILL_TRAIT( pSoldier, KNIFING_OT );
+-			}
++			attackrating += traits.HandcuffBonus();
++			defenserating += pSoldier->traits.HandcuffBonus();
+ 
+ 			ReducePointsForFatigue( this, &attackrating );
+ 			ReducePointsForFatigue( pSoldier, &defenserating );
+@@ -22928,114 +22890,6 @@ BOOLEAN DoesSoldierWearGasMask( SOLDIERTYPE *pSoldier )//dnl ch40 200909
+ 	return(FALSE);
+ }
+ 
+-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-// SANDRO - added following functions
+-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-BOOLEAN HAS_SKILL_TRAIT( SOLDIERTYPE * pSoldier, UINT8 uiSkillTraitNumber )
+-{
+-	if ( pSoldier == NULL )
+-		return FALSE;
+-
+-	// Flugente: compatibility with skills
+-	if ( uiSkillTraitNumber == INTEL || uiSkillTraitNumber == VARIOUSSKILLS )
+-		return TRUE;
+-
+-	INT8 bNumMajorTraitsCounted = 0;
+-	INT8 bMaxTraits = gSkillTraitValues.ubMaxNumberOfTraits;
+-	INT8 bMaxMajorTraits = gSkillTraitValues.ubNumberOfMajorTraitsAllowed;
+-
+-	// check old/new traits
+-	if ( gGameOptions.fNewTraitSystem )
+-	{
+-		// exception for special merc
+-		//if ( gSkillTraitValues.fAllowSpecialMercTraitsException && pSoldier->ubProfile == gSkillTraitValues.ubSpecialMercID)
+-		//{
+-		//	bMaxTraits++;
+-		//	bMaxMajorTraits++;
+-		//}
+-
+-		for ( INT8 bCnt = 0; bCnt < min( 30, bMaxTraits ); ++bCnt )
+-		{
+-			if ( pSoldier->stats.ubSkillTraits[bCnt] == uiSkillTraitNumber )
+-				return(TRUE);
+-
+-			if ( MajorTrait( pSoldier->stats.ubSkillTraits[bCnt] ) )
+-				++bNumMajorTraitsCounted;
+-
+-			// if we exceeded the allowed number of major traits, ignore the rest of them
+-			if ( bNumMajorTraitsCounted > min( 20, bMaxMajorTraits ) )
+-				break;
+-		}
+-	}
+-	else
+-	{
+-		if ( pSoldier->stats.ubSkillTraits[0] == uiSkillTraitNumber )
+-			return(TRUE);
+-
+-		if ( pSoldier->stats.ubSkillTraits[1] == uiSkillTraitNumber )
+-			return(TRUE);
+-	}
+-
+-	return(FALSE);
+-}
+-
+-INT8 NUM_SKILL_TRAITS( SOLDIERTYPE * pSoldier, UINT8 uiSkillTraitNumber )
+-{
+-	if ( pSoldier == NULL )
+-		return(0);
+-
+-	INT8 bNumberOfTraits = 0;
+-	INT8 bNumMajorTraitsCounted = 0;
+-	INT8 bMaxTraits = gSkillTraitValues.ubMaxNumberOfTraits;
+-	INT8 bMaxMajorTraits = gSkillTraitValues.ubNumberOfMajorTraitsAllowed;
+-
+-	// check old/new traits
+-	if ( gGameOptions.fNewTraitSystem )
+-	{
+-		// exception for special merc
+-		//if ( gSkillTraitValues.fAllowSpecialMercTraitsException && pSoldier->ubProfile == gSkillTraitValues.ubSpecialMercID)
+-		//{
+-		//	bMaxTraits++;
+-		//	bMaxMajorTraits++;
+-		//}
+-
+-		for ( INT8 bCnt = 0; bCnt < min( 30, bMaxTraits ); ++bCnt )
+-		{
+-			if ( pSoldier->stats.ubSkillTraits[bCnt] == uiSkillTraitNumber )
+-				++bNumberOfTraits;
+-				
+-			if ( MajorTrait( pSoldier->stats.ubSkillTraits[bCnt] ) )
+-				++bNumMajorTraitsCounted;
+-
+-			// if we exceeded the allowed number of major traits, ignore the rest of them
+-			if ( bNumMajorTraitsCounted > min( 20, bMaxMajorTraits ) )
+-				break;
+-		}
+-
+-		// cannot have more than one same minor trait
+-		if ( !TwoStagedTrait( uiSkillTraitNumber ) )
+-			return (min( 1, bNumberOfTraits ));
+-		
+-		return (min( 2, bNumberOfTraits ));
+-	}
+-	else
+-	{
+-		if ( pSoldier->stats.ubSkillTraits[0] == uiSkillTraitNumber )
+-			++bNumberOfTraits;
+-
+-		if ( pSoldier->stats.ubSkillTraits[1] == uiSkillTraitNumber )
+-			++bNumberOfTraits;
+-
+-		// Electronics, Ambidextrous and Camouflaged can only be of one grade
+-		if ( uiSkillTraitNumber == ELECTRONICS_OT ||
+-			 uiSkillTraitNumber == AMBIDEXT_OT ||
+-			 uiSkillTraitNumber == CAMOUFLAGED_OT )
+-			 return (min( 1, bNumberOfTraits ));
+-
+-		return (bNumberOfTraits);
+-	}
+-}
+-
+ UINT8 GetSquadleadersCountInVicinity( SOLDIERTYPE * pSoldier, BOOLEAN fWithHigherLevel, BOOLEAN fDontCheckDistance )
+ {
+ 	UINT8 cnt = 0;
+@@ -23573,10 +23427,7 @@ BOOLEAN ResolvePendingInterrupt( SOLDIERTYPE * pSoldier, UINT8 ubInterruptType )
+ 								(pTeammate->stats.bAgility * 2) +
+ 								(pTeammate->stats.bWisdom)) / 100);
+ 							// add bonus per Squadleader trait of the original interrupter
+-							if ( HAS_SKILL_TRAIT( pInterrupter, SQUADLEADER_NT ) && gGameOptions.fNewTraitSystem )
+-							{
+-								usColIntChance += gSkillTraitValues.ubSLCollectiveInterruptsBonus * NUM_SKILL_TRAITS( pInterrupter, SQUADLEADER_NT );
+-							}
++							usColIntChance += pInterrupter->traits.ubSLCollectiveInterruptsBonus();
+ 							if ( PreChance( usColIntChance ) )
+ 							{
+ 								ubaInterruptersList[ubInterruptersFound] = pTeammate->ubID;
+@@ -23716,51 +23567,6 @@ BOOLEAN DecideAltAnimForBigMerc( SOLDIERTYPE * pSoldier )
+ 	return FALSE;
+ }
+ 
+-BOOLEAN TwoStagedTrait( UINT8 uiSkillTraitNumber )
+-{
+-	if ( gGameOptions.fNewTraitSystem )
+-	{
+-		if ( uiSkillTraitNumber > 0 )
+-		{
+-			// covert ops is a major trait that is in a different location
+-			if ( uiSkillTraitNumber == COVERT_NT )
+-				return TRUE;
+-
+-			// other traits below NUM_ORIGINAL_MAJOR_TRAITS are all major
+-			if ( uiSkillTraitNumber <= NUM_ORIGINAL_MAJOR_TRAITS )
+-				return TRUE;
+-		}
+-	}
+-	else
+-	{
+-		if ( uiSkillTraitNumber == IMP_SKILL_TRAITS__ELECTRONICS ||
+-			 uiSkillTraitNumber == IMP_SKILL_TRAITS__AMBIDEXTROUS ||
+-			 uiSkillTraitNumber == IMP_SKILL_TRAITS__CAMO )
+-			return(FALSE);
+-
+-		return TRUE;
+-	}
+-
+-	return FALSE;
+-}
+-
+-// determine if this is a major trait (no longer all two-staged)
+-BOOLEAN MajorTrait( UINT8 uiSkillTraitNumber )
+-{
+-	if ( uiSkillTraitNumber > 0 )
+-	{
+-		// covert ops is a major trait that is in a different location
+-		if ( uiSkillTraitNumber == COVERT_NT )
+-			return TRUE;
+-
+-		// other traits below NUM_ORIGINAL_MAJOR_TRAITS are all major
+-		if ( uiSkillTraitNumber <= NUM_ORIGINAL_MAJOR_TRAITS )
+-			return TRUE;
+-	}
+-
+-	return FALSE;
+-}
+-
+ BOOLEAN GetRadioOperatorSignal( UINT8 usOwner, INT32* psTargetGridNo )
+ {
+ 	// get the 'real owner'
+@@ -24163,10 +23969,9 @@ UINT32 VirtualSoldierDressWound( SOLDIERTYPE *pSoldier, SOLDIERTYPE *pVictim, OB
+ 		uiPossible += (uiPossible / 2);			// add extra 50 %
+ 
+ 	// Doctor trait improves basic bandaging ability
+-	if ( !(fOnSurgery) && gGameOptions.fNewTraitSystem && HAS_SKILL_TRAIT( pSoldier, DOCTOR_NT ) )
++	if ( !(fOnSurgery) && gGameOptions.fNewTraitSystem )
+ 	{
+-		uiPossible = uiPossible * (100 - gSkillTraitValues.bSpeedModifierBandaging) / 100;
+-		uiPossible += (uiPossible * gSkillTraitValues.ubDOBandagingSpeedPercent * NUM_SKILL_TRAITS( pSoldier, DOCTOR_NT ) + pSoldier->GetBackgroundValue( BG_PERC_BANDAGING )) / 100;
++		uiPossible = ( uiPossible * pSoldier->traits.BandagingSpeedFactorInPercent() + pSoldier->GetBackgroundValue( BG_PERC_BANDAGING ) ) / 100;
+ 	}
+ 
+ 	uiActual = uiPossible;		// start by assuming maximum possible
+diff --git Tactical/Soldier Control.h Tactical/Soldier Control.h
+index 9bf3b293..fb6ae6eb 100644
+--- Tactical/Soldier Control.h	
++++ Tactical/Soldier Control.h	
+@@ -20,6 +20,7 @@
+ #include <iterator>
+ #include "GameSettings.h"	// added by Flugente
+ #include "Disease.h"		// added by Flugente
++#include "Traits.h"
+ 
+ #define PTR_CIVILIAN	(pSoldier->bTeam == CIV_TEAM)
+ #define PTR_CROUCHED	(gAnimControl[ pSoldier->usAnimState ].ubHeight == ANIM_CROUCH)
+@@ -115,11 +116,6 @@ extern UINT16 CivLastNames[MAXCIVLASTNAMES][10];
+ #define	SOLDIER_TRAIT_MARTIALARTS		0x0800
+ #define	SOLDIER_TRAIT_KNIFING				0x1000
+ */
+-// SANDRO was here, messed this..
+-//#define HAS_SKILL_TRAIT( s, t ) (s->stats.ubSkillTrait1 == t || s->stats.ubSkillTrait2 == t)
+-//#define NUM_SKILL_TRAITS( s, t ) ( (s->stats.ubSkillTrait1 == t) ? ( (s->stats.ubSkillTrait2 == t) ? 2 : 1 ) : ( (s->stats.ubSkillTrait2 == t) ? 1 : 0 ) )
+-BOOLEAN HAS_SKILL_TRAIT( SOLDIERTYPE * pSoldier, UINT8 uiSkillTraitNumber );
+-INT8 NUM_SKILL_TRAITS( SOLDIERTYPE * pSoldier, UINT8 uiSkillTraitNumber );
+ 
+ #define	SOLDIER_QUOTE_SAID_IN_SHIT										0x0001
+ #define	SOLDIER_QUOTE_SAID_LOW_BREATH									0x0002
+@@ -1016,7 +1012,7 @@ public:
+ 	INT8												bExplosive;
+ 	INT8												bMedical;
+ 	INT8												bScientific;	
+-	UINT8												ubSkillTraits[30];
++	UINT8												ubSkillTraits[ MAX_NUM_TRAITS ];
+ 	//UINT8												ubSkillTrait2;
+ 	//UINT8												ubSkillTrait3; // added by SANDRO
+ };
+@@ -1605,6 +1601,9 @@ public:
+ 	INT32 sPlotSrcGrid;
+ 	//std::vector<UINT32>	CTH;
+ 
++	// move some traits logic to own class, composition to help with clutter
++	SoldierTraits traits;
++
+ 	// sevenfm: remember suppression points, shock from last attack
+ 	// these counters are used only for showing suppression values above soldier (similar to damage counter)
+ 	// these values are not saved
+@@ -1761,9 +1760,6 @@ public:
+ 	BOOLEAN CanRobotBeControlled( void );
+ 	BOOLEAN ControllingRobot( void );
+ 
+-
+-
+-
+ 	BOOLEAN SoldierReadyWeapon( INT16 sTargetXPos, INT16 sTargetYPos, BOOLEAN fEndReady, BOOLEAN fRaiseToHipOnly );
+ 	BOOLEAN SoldierReadyWeapon( void );
+ 	BOOLEAN InternalSoldierReadyWeapon( UINT8 sFacingDir, BOOLEAN fEndReady, BOOLEAN fRaiseToHipOnly );
+@@ -2144,8 +2140,6 @@ BOOLEAN AIDecideHipOrShoulderStance( SOLDIERTYPE * pSoldier, INT32 iGridNo );
+ BOOLEAN DecideAltAnimForBigMerc( SOLDIERTYPE * pSoldier );
+ 
+ // added by Flugente
+-BOOLEAN TwoStagedTrait( UINT8 uiSkillTraitNumber );						// determine if this (new) trait has two stages
+-BOOLEAN MajorTrait( UINT8 uiSkillTraitNumber );							// determine if this is a major trait
+ BOOLEAN GetRadioOperatorSignal(UINT8 usOwner, INT32* psTargetGridNo);	// retrieve the gridno of a radio operator who (or whose team) ordered an artillery strike
+ BOOLEAN IsValidArtilleryOrderSector( INT16 sSectorX, INT16 sSectorY, INT8 bSectorZ, UINT8 bTeam );		// can an artillery strike be ordered FROM this sector
+ BOOLEAN SectorJammed();
+diff --git Tactical/Soldier Create.cpp Tactical/Soldier Create.cpp
+index bb499f33..4beb1deb 100644
+--- Tactical/Soldier Create.cpp	
++++ Tactical/Soldier Create.cpp	
+@@ -4651,26 +4651,27 @@ BOOLEAN AssignTraitsToSoldier( SOLDIERTYPE *pSoldier, SOLDIERCREATE_STRUCT *pCre
+ 
+ 		if ( type > -1 )
+ 		{
+-			if ( zSoldierProfile[type][pSoldier->usSoldierProfile].uiTrait[0] > 0 )
++			SOLDIER_PROFILE_VALUES* pValues = &zSoldierProfile[type][pSoldier->usSoldierProfile];
++			if ( pValues->uiTrait[0] > 0 )
+ 			{
+-				pSoldier->stats.ubSkillTraits[0] = zSoldierProfile[type][pSoldier->usSoldierProfile].uiTrait[0];
++				pSoldier->stats.ubSkillTraits[0] = pValues->uiTrait[0];
+ 				ATraitAssigned = TRUE;
+ 			}
+ 
+-			if ( zSoldierProfile[type][pSoldier->usSoldierProfile].uiTrait[1] > 0 )
++			if ( pValues->uiTrait[1] > 0 )
+ 			{
+-				pSoldier->stats.ubSkillTraits[1] = zSoldierProfile[type][pSoldier->usSoldierProfile].uiTrait[1];
++				pSoldier->stats.ubSkillTraits[1] = pValues->uiTrait[1];
+ 				BTraitAssigned = TRUE;
+ 			}
+ 
+-			if ( zSoldierProfile[type][pSoldier->usSoldierProfile].uiTrait[2] > 0 )
++			if ( pValues->uiTrait[2] > 0 )
+ 			{
+ 				// we have to make sure that not all 3 traits are major traits - if that happens, we ignore the third one
+-				if ( MajorTrait( pSoldier->stats.ubSkillTraits[0] ) && MajorTrait( pSoldier->stats.ubSkillTraits[1] ) && MajorTrait( zSoldierProfile[type][pSoldier->usSoldierProfile].uiTrait[2] ) )
++				if ( HasMajorNTrait( (NTrait)(pSoldier->stats.ubSkillTraits[0]) ) && HasMajorNTrait( (NTrait)(pSoldier->stats.ubSkillTraits[1]) ) && HasMajorNTrait( (NTrait)(pValues->uiTrait[2]) ) )
+ 					;
+ 				else
+ 				{
+-					pSoldier->stats.ubSkillTraits[2] = zSoldierProfile[type][pSoldier->usSoldierProfile].uiTrait[2];
++					pSoldier->stats.ubSkillTraits[2] = pValues->uiTrait[2];
+ 					CTraitAssigned = TRUE;
+ 				}
+ 			}
+diff --git Tactical/Soldier Profile.cpp Tactical/Soldier Profile.cpp
+index 2941f94c..a8c57293 100644
+--- Tactical/Soldier Profile.cpp	
++++ Tactical/Soldier Profile.cpp	
+@@ -2765,56 +2765,3 @@ INT8 CheckMercsNearForCharTraits( UINT8 ubProfileID, INT8 bCharTraitID )
+ 
+ 	return( bNumber );
+ }
+-
+-INT8 ProfileHasSkillTrait( INT32 ubProfileID, INT8 bSkillTrait )
+-{
+-	INT8 bNumTraits = 0;
+-	INT8 bNumMajorTraitsCounted = 0;
+-	INT8 bMaxTraits = gSkillTraitValues.ubMaxNumberOfTraits;
+-	INT8 bMaxMajorTraits = gSkillTraitValues.ubNumberOfMajorTraitsAllowed;
+-
+-	// check old/new traits
+-	if (gGameOptions.fNewTraitSystem)
+-	{
+-		// exception for special merc
+-		//if ( gSkillTraitValues.fAllowSpecialMercTraitsException && ubProfileID == gSkillTraitValues.ubSpecialMercID)
+-		//{
+-		//	bMaxTraits++;
+-		//	bMaxMajorTraits++;
+-		//}
+-		
+-		for ( INT8 bCnt = 0; bCnt < bMaxTraits; ++bCnt )
+-		{
+-			if ( gMercProfiles[ubProfileID].bSkillTraits[bCnt] == bSkillTrait )
+-				++bNumTraits;
+-				
+-			if ( MajorTrait( gMercProfiles[ubProfileID].bSkillTraits[bCnt] ) )
+-				++bNumMajorTraitsCounted;
+-
+-			// if we exceeded the allowed number of major traits, ignore the rest of them
+-			if ( bNumMajorTraitsCounted > bMaxMajorTraits )
+-				break;
+-		}
+-
+-		if ( TwoStagedTrait( bSkillTrait ) )
+-			return (min( 2, bNumTraits ));
+-
+-		return (min( 1, bNumTraits ));
+-	}
+-	else
+-	{
+-		if (gMercProfiles[ubProfileID].bSkillTraits[ 0 ] == bSkillTrait)
+-			++bNumTraits;
+-
+-		if (gMercProfiles[ubProfileID].bSkillTraits[ 1 ] == bSkillTrait)
+-			++bNumTraits;	
+-
+-		// Electronics, Ambidextrous and Camouflaged can only be of one grade
+-		if( bSkillTrait == ELECTRONICS_OT || 
+-			 bSkillTrait == AMBIDEXT_OT ||
+-			  bSkillTrait == CAMOUFLAGED_OT )
+-			return ( min(1, bNumTraits) );
+-		
+-		return ( bNumTraits );
+-	}
+-}
+diff --git Tactical/Soldier Profile.h Tactical/Soldier Profile.h
+index 9eef6079..52e203dd 100644
+--- Tactical/Soldier Profile.h	
++++ Tactical/Soldier Profile.h	
+@@ -414,6 +414,5 @@ void OverwriteMercOpinionsWithXMLData( UINT32 uiLoop );
+ 
+ // SANDRO - added functions
+ INT8 CheckMercsNearForCharTraits( UINT8 ubProfileID, INT8 bCharTraitID );
+-INT8 ProfileHasSkillTrait( INT32 ubProfileID, INT8 bSkillTrait );
+ 
+ #endif
+diff --git Tactical/Tactical_VS2005.vcproj Tactical/Tactical_VS2005.vcproj
+index b74e3b27..3410e906 100644
+--- Tactical/Tactical_VS2005.vcproj
++++ Tactical/Tactical_VS2005.vcproj
+@@ -670,6 +670,10 @@
+ 				RelativePath=".\TeamTurns.h"
+ 				>
+ 			</File>
++			<File
++				RelativePath=".\Traits.h"
++				>
++			</File>
+ 			<File
+ 				RelativePath=".\UI Cursors.h"
+ 				>
+@@ -1008,6 +1012,10 @@
+ 				RelativePath=".\TeamTurns.cpp"
+ 				>
+ 			</File>
++			<File
++				RelativePath=".\Traits.cpp"
++				>
++			</File>
+ 			<File
+ 				RelativePath=".\Turn Based Input.cpp"
+ 				>
+diff --git Tactical/Tactical_VS2008.vcproj Tactical/Tactical_VS2008.vcproj
+index 65dc7bb5..b4b62387 100644
+--- Tactical/Tactical_VS2008.vcproj
++++ Tactical/Tactical_VS2008.vcproj
+@@ -674,6 +674,10 @@
+ 				RelativePath="TeamTurns.h"
+ 				>
+ 			</File>
++			<File
++				RelativePath="Traits.h"
++				>
++			</File>
+ 			<File
+ 				RelativePath="UI Cursors.h"
+ 				>
+@@ -1010,6 +1014,10 @@
+ 				RelativePath="TeamTurns.cpp"
+ 				>
+ 			</File>
++			<File
++				RelativePath="Traits.cpp"
++				>
++			</File>
+ 			<File
+ 				RelativePath="Turn Based Input.cpp"
+ 				>
+diff --git Tactical/Tactical_VS2010.vcxproj Tactical/Tactical_VS2010.vcxproj
+index f4502dcc..31a7aefc 100644
+--- Tactical/Tactical_VS2010.vcxproj
++++ Tactical/Tactical_VS2010.vcxproj
+@@ -106,6 +106,7 @@
+     <ClInclude Include="Tactical Save.h" />
+     <ClInclude Include="Tactical Turns.h" />
+     <ClInclude Include="TeamTurns.h" />
++    <ClInclude Include="Traits.h" />
+     <ClInclude Include="UI Cursors.h" />
+     <ClInclude Include="Vehicles.h" />
+     <ClInclude Include="Weapons.h" />
+@@ -190,6 +191,7 @@
+     <ClCompile Include="Tactical Save.cpp" />
+     <ClCompile Include="Tactical Turns.cpp" />
+     <ClCompile Include="TeamTurns.cpp" />
++    <ClCompile Include="Traits.cpp" />
+     <ClCompile Include="Turn Based Input.cpp" />
+     <ClCompile Include="UI Cursors.cpp" />
+     <ClCompile Include="VehicleMenu.cpp" />
+diff --git Tactical/Tactical_VS2010.vcxproj.filters Tactical/Tactical_VS2010.vcxproj.filters
+index b7c82e98..981cecca 100644
+--- Tactical/Tactical_VS2010.vcxproj.filters
++++ Tactical/Tactical_VS2010.vcxproj.filters
+@@ -246,6 +246,9 @@
+     <ClInclude Include="TeamTurns.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
++    <ClInclude Include="Traits.h">
++      <Filter>Header Files</Filter>
++    </ClInclude>
+     <ClInclude Include="UI Cursors.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
+@@ -491,6 +494,9 @@
+     <ClCompile Include="TeamTurns.cpp">
+       <Filter>Source Files</Filter>
+     </ClCompile>
++    <ClCompile Include="Traits.cpp">
++      <Filter>Source Files</Filter>
++    </ClCompile>
+     <ClCompile Include="Turn Based Input.cpp">
+       <Filter>Source Files</Filter>
+     </ClCompile>
+diff --git Tactical/Tactical_VS2013.vcxproj Tactical/Tactical_VS2013.vcxproj
+index 770f41a7..af305fba 100644
+--- Tactical/Tactical_VS2013.vcxproj
++++ Tactical/Tactical_VS2013.vcxproj
+@@ -106,6 +106,7 @@
+     <ClInclude Include="Tactical Save.h" />
+     <ClInclude Include="Tactical Turns.h" />
+     <ClInclude Include="TeamTurns.h" />
++    <ClInclude Include="Traits.h" />
+     <ClInclude Include="UI Cursors.h" />
+     <ClInclude Include="Vehicles.h" />
+     <ClInclude Include="VehicleMenu.h" />
+@@ -191,6 +192,7 @@
+     <ClCompile Include="Tactical Save.cpp" />
+     <ClCompile Include="Tactical Turns.cpp" />
+     <ClCompile Include="TeamTurns.cpp" />
++    <ClCompile Include="Traits.cpp" />
+     <ClCompile Include="Turn Based Input.cpp" />
+     <ClCompile Include="UI Cursors.cpp" />
+     <ClCompile Include="Vehicles.cpp" />
+diff --git Tactical/Tactical_VS2013.vcxproj.filters Tactical/Tactical_VS2013.vcxproj.filters
+index 15c9b3a3..58475154 100644
+--- Tactical/Tactical_VS2013.vcxproj.filters
++++ Tactical/Tactical_VS2013.vcxproj.filters
+@@ -240,6 +240,9 @@
+     <ClInclude Include="TeamTurns.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
++    <ClInclude Include="Traits.h">
++      <Filter>Header Files</Filter>
++    </ClInclude>
+     <ClInclude Include="UI Cursors.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
+@@ -488,6 +491,9 @@
+     <ClCompile Include="TeamTurns.cpp">
+       <Filter>Source Files</Filter>
+     </ClCompile>
++    <ClCompile Include="Traits.cpp">
++      <Filter>Source Files</Filter>
++    </ClCompile>
+     <ClCompile Include="Turn Based Input.cpp">
+       <Filter>Source Files</Filter>
+     </ClCompile>
+diff --git Tactical/Tactical_VS2017.vcxproj Tactical/Tactical_VS2017.vcxproj
+index b1e56e8a..204adab7 100644
+--- Tactical/Tactical_VS2017.vcxproj
++++ Tactical/Tactical_VS2017.vcxproj
+@@ -97,7 +97,7 @@
+     <ClInclude Include="Soldier macros.h" />
+     <ClInclude Include="soldier profile type.h" />
+     <ClInclude Include="Soldier Profile.h" />
+-    <ClInclude Include="soldier tile.h" />
++    <ClInclude Include="soldier tile.h" />
+     <ClInclude Include="Spread burst.h" />
+     <ClInclude Include="Squads.h" />
+     <ClInclude Include="Strategic Exit GUI.h" />
+@@ -106,6 +106,7 @@
+     <ClInclude Include="Tactical Save.h" />
+     <ClInclude Include="Tactical Turns.h" />
+     <ClInclude Include="TeamTurns.h" />
++    <ClInclude Include="Traits.h" />
+     <ClInclude Include="UI Cursors.h" />
+     <ClInclude Include="Vehicles.h" />
+     <ClInclude Include="VehicleMenu.h" />
+@@ -183,7 +184,7 @@
+     <ClCompile Include="Soldier Init List.cpp" />
+     <ClCompile Include="Soldier Profile.cpp" />
+     <ClCompile Include="Soldier Tile.cpp" />
+-    <ClCompile Include="SoldierTooltips.cpp" />
++    <ClCompile Include="SoldierTooltips.cpp" />
+     <ClCompile Include="Spread Burst.cpp" />
+     <ClCompile Include="Squads.cpp" />
+     <ClCompile Include="Strategic Exit GUI.cpp" />
+@@ -191,6 +192,7 @@
+     <ClCompile Include="Tactical Save.cpp" />
+     <ClCompile Include="Tactical Turns.cpp" />
+     <ClCompile Include="TeamTurns.cpp" />
++    <ClCompile Include="Traits.cpp" />
+     <ClCompile Include="Turn Based Input.cpp" />
+     <ClCompile Include="UI Cursors.cpp" />
+     <ClCompile Include="Vehicles.cpp" />
+diff --git Tactical/Tactical_VS2017.vcxproj.filters Tactical/Tactical_VS2017.vcxproj.filters
+index 15c9b3a3..58475154 100644
+--- Tactical/Tactical_VS2017.vcxproj.filters
++++ Tactical/Tactical_VS2017.vcxproj.filters
+@@ -240,6 +240,9 @@
+     <ClInclude Include="TeamTurns.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
++    <ClInclude Include="Traits.h">
++      <Filter>Header Files</Filter>
++    </ClInclude>
+     <ClInclude Include="UI Cursors.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
+@@ -488,6 +491,9 @@
+     <ClCompile Include="TeamTurns.cpp">
+       <Filter>Source Files</Filter>
+     </ClCompile>
++    <ClCompile Include="Traits.cpp">
++      <Filter>Source Files</Filter>
++    </ClCompile>
+     <ClCompile Include="Turn Based Input.cpp">
+       <Filter>Source Files</Filter>
+     </ClCompile>
+diff --git Tactical/Tactical_VS2019.vcxproj Tactical/Tactical_VS2019.vcxproj
+index f1b24574..271a3735 100644
+--- Tactical/Tactical_VS2019.vcxproj
++++ Tactical/Tactical_VS2019.vcxproj
+@@ -106,6 +106,7 @@
+     <ClInclude Include="Tactical Save.h" />
+     <ClInclude Include="Tactical Turns.h" />
+     <ClInclude Include="TeamTurns.h" />
++    <ClInclude Include="Traits.h" />
+     <ClInclude Include="UI Cursors.h" />
+     <ClInclude Include="Vehicles.h" />
+     <ClInclude Include="VehicleMenu.h" />
+@@ -191,6 +192,7 @@
+     <ClCompile Include="Tactical Save.cpp" />
+     <ClCompile Include="Tactical Turns.cpp" />
+     <ClCompile Include="TeamTurns.cpp" />
++    <ClCompile Include="Traits.cpp" />
+     <ClCompile Include="Turn Based Input.cpp" />
+     <ClCompile Include="UI Cursors.cpp" />
+     <ClCompile Include="Vehicles.cpp" />
+diff --git Tactical/Tactical_VS2019.vcxproj.filters Tactical/Tactical_VS2019.vcxproj.filters
+index f4d02f50..d5fd227f 100644
+--- Tactical/Tactical_VS2019.vcxproj.filters
++++ Tactical/Tactical_VS2019.vcxproj.filters
+@@ -240,6 +240,9 @@
+     <ClInclude Include="TeamTurns.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
++    <ClInclude Include="Traits.h">
++      <Filter>Header Files</Filter>
++    </ClInclude>
+     <ClInclude Include="UI Cursors.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
+@@ -488,6 +491,9 @@
+     <ClCompile Include="TeamTurns.cpp">
+       <Filter>Source Files</Filter>
+     </ClCompile>
++    <ClCompile Include="Traits.cpp">
++      <Filter>Source Files</Filter>
++    </ClCompile>
+     <ClCompile Include="Turn Based Input.cpp">
+       <Filter>Source Files</Filter>
+     </ClCompile>
+diff --git Tactical/Traits.cpp Tactical/Traits.cpp
+new file mode 100644
+index 00000000..7618b48f
+--- /dev/null
++++ Tactical/Traits.cpp
+@@ -0,0 +1,1442 @@
++#ifdef PRECOMPILEDHEADERS
++#include "Tactical All.h"
++#else
++#include "builddefines.h"
++#include <wchar.h>
++#include <stdio.h>
++#include <string.h>
++#include "wcheck.h"
++#include "Render Fun.h"
++#include "stdlib.h"
++#include "debug.h"
++#include "MemMan.h"
++#include "Overhead Types.h"
++#include "soldier profile type.h"
++#include "Soldier Control.h"
++#include "Interface.h"
++#include "Text.h"
++#include "personnel.h"
++#endif
++#include <Laptop\IMP Skill Trait.h>
++#include <Soldier Profile.h>
++#include <Animation Data.h>
++
++SoldierTraits::SoldierTraits( SOLDIERTYPE* pSoldier ) : pSoldier( pSoldier )
++{
++}
++
++// traits, non-accessors
++
++BOOLEAN SoldierTraits::HasMartialArtistSpecialAnimation()
++{
++	if ( pSoldier->ubProfile == NO_PROFILE || pSoldier->ubBodyType != REGMALE )  // SANDRO - added check for body type
++		return FALSE;
++
++	return gGameOptions.fNewTraitSystem
++		? ( SoldierNTraitLevel( MARTIAL_ARTS_NT ) >= ( ( gSkillTraitValues.fPermitExtraAnimationsOnlyToMA ) ? 2 : 1 ) )
++		: SoldierOTraitLevel( MARTIALARTS_OT ) > 0;
++}
++
++BOOLEAN SoldierTraits::HasThrowingSpecialAnimation()
++{
++	return gGameOptions.fNewTraitSystem ? SoldierNTraitLevel( THROWING_NT ) > 0 : SoldierOTraitLevel( THROWING_OT ) > 0;
++}
++
++BOOLEAN SoldierTraits::HasRequiredNumberOfTraitsNeededForSurgery()
++{
++	return gGameOptions.fNewTraitSystem && ( SoldierNTraitLevel( DOCTOR_NT ) >= gSkillTraitValues.ubDONumberTraitsNeededForSurgery );
++}
++
++FLOAT SoldierTraits::BandagingSpeedFactorInPercent()
++{
++	return gGameOptions.fNewTraitSystem ?
++		( 100 - gSkillTraitValues.bSpeedModifierBandaging )
++		* gSkillTraitValues.ubDOBandagingSpeedPercent
++		* SoldierNTraitLevel( DOCTOR_NT )
++		: 100;
++}
++
++BOOLEAN SoldierTraits::HasFocus()
++{
++	return gGameOptions.fNewTraitSystem
++		&& (
++			HAS_SKILL_TRAIT( pSoldier, AUTO_WEAPONS_NT )
++			|| HAS_SKILL_TRAIT( pSoldier, HEAVY_WEAPONS_NT )
++			|| HAS_SKILL_TRAIT( pSoldier, SNIPER_NT )
++			|| HAS_SKILL_TRAIT( pSoldier, RANGER_NT )
++			|| HAS_SKILL_TRAIT( pSoldier, GUNSLINGER_NT )
++			);
++}
++
++UINT8 SoldierTraits::HandcuffBonus( void )
++{
++	if ( gGameOptions.fNewTraitSystem )
++	{
++		return 25 * SoldierNTraitLevel( MARTIAL_ARTS_NT ) + 10 * SoldierNTraitLevel( MELEE_NT );
++	}
++	else
++	{
++		return 25 * SoldierOTraitLevel( MARTIALARTS_OT ) + 25 * SoldierOTraitLevel( HANDTOHAND_OT ) + 10 * SoldierOTraitLevel( KNIFING_OT );
++	}
++}
++
++FLOAT SoldierTraits::GetAttackAPMultiplier( OBJECTTYPE* pObj, UINT8 ubMode )
++{
++	UINT8 percent = 0;
++
++	if ( !pSoldier || !pObj || !gGameOptions.fNewTraitSystem )
++	{
++		// we shouldn't be here...
++	}
++	else if ( ubMode == WM_NORMAL || ubMode == WM_BURST || ubMode == WM_AUTOFIRE )
++	{
++		WEAPONTYPE* pWeaponType = &Weapon[pObj->usItem];
++		INVTYPE* pInvType = &Item[pObj->usItem];
++
++		if ( ( ubMode == WM_BURST || ubMode == WM_AUTOFIRE ) && pWeaponType->ubWeaponType == GUN_LMG )
++		{
++			percent = ubAWFiringSpeedBonusLMGs();
++		}
++		else if ( pWeaponType->ubWeaponType == GUN_PISTOL )
++		{
++			percent = ubGSFiringSpeedBonusPistols();
++		}
++		else if ( pWeaponType->ubWeaponType == GUN_SHOTGUN )
++		{
++			percent = ubRAFiringSpeedBonusShotguns();
++		}
++		else if ( pInvType->usItemClass == IC_BLADE )
++		{
++			percent = ubMEBladesAPsReduction();
++		}
++		else if ( pInvType->usItemClass == IC_PUNCH && pInvType->brassknuckles )
++		{
++			percent = ubMAPunchAPsReduction();
++		}
++		else if ( pInvType->usItemClass == IC_THROWING_KNIFE )
++		{
++			percent = ubTHBladesAPsReduction();
++		}
++		// grenade launchers
++		else if ( ( pInvType->usItemClass == IC_LAUNCHER || pInvType->grenadelauncher ) && !( pInvType->rocketlauncher ) && !( pInvType->mortar ) )
++		{
++			percent = ubHWGrenadeLaunchersAPsReduction();
++		}
++		// rocket launchers
++		else if ( ( pInvType->rocketlauncher || pInvType->singleshotrocketlauncher ) && !( pInvType->mortar ) )
++		{
++			percent = ubHWRocketLaunchersAPsReduction();
++		}
++		// mortar
++		else if ( pInvType->mortar )
++		{
++			percent = ubHWMortarAPsReduction() + pSoldier->GetBackgroundValue( BG_ARTILLERY );
++		}
++	}
++	else if ( ubMode == WM_ATTACHED_GL || ubMode == WM_ATTACHED_GL_BURST || ubMode == WM_ATTACHED_GL_AUTO )
++	{
++		percent = ubHWGrenadeLaunchersAPsReduction();
++	}
++
++	return ( 100 - percent ) / 100.0f;
++}
++
++// traits, properties
++
++UINT8 SoldierTraits::ubAWBonusCtHAssaultRifles()
++{
++	return gSkillTraitValues.ubAWBonusCtHAssaultRifles * SoldierNTraitLevel( AUTO_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubAWBonusCtHSMGs()
++{
++	return gSkillTraitValues.ubAWBonusCtHSMGs * SoldierNTraitLevel( AUTO_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubAWBonusCtHLMGs()
++{
++	return gSkillTraitValues.ubAWBonusCtHLMGs * SoldierNTraitLevel( AUTO_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubAWAutoFirePenaltyReduction()
++{
++	return gSkillTraitValues.ubAWAutoFirePenaltyReduction * SoldierNTraitLevel( AUTO_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubAWUnwantedBulletsReduction()
++{
++	return gSkillTraitValues.ubAWUnwantedBulletsReduction * SoldierNTraitLevel( AUTO_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubAWFiringSpeedBonusLMGs()
++{
++	return gSkillTraitValues.ubAWFiringSpeedBonusLMGs * SoldierNTraitLevel( AUTO_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubAWPercentReadyLMGReduction()
++{
++	return gSkillTraitValues.ubAWPercentReadyLMGReduction * SoldierNTraitLevel( AUTO_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubHWGrenadeLaunchersAPsReduction()
++{
++	return gSkillTraitValues.ubHWGrenadeLaunchersAPsReduction * SoldierNTraitLevel( HEAVY_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubHWRocketLaunchersAPsReduction()
++{
++	return gSkillTraitValues.ubHWRocketLaunchersAPsReduction * SoldierNTraitLevel( HEAVY_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubHWBonusCtHGrenadeLaunchers()
++{
++	return gSkillTraitValues.ubHWBonusCtHGrenadeLaunchers * SoldierNTraitLevel( HEAVY_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubHWBonusCtHRocketLaunchers()
++{
++	return gSkillTraitValues.ubHWBonusCtHRocketLaunchers * SoldierNTraitLevel( HEAVY_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubHWMortarAPsReduction()
++{
++	return gSkillTraitValues.ubHWMortarAPsReduction * SoldierNTraitLevel( HEAVY_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubHWMortarCtHPenaltyReduction()
++{
++	return gSkillTraitValues.ubHWMortarCtHPenaltyReduction * SoldierNTraitLevel( HEAVY_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubHWDamageTanksBonusPercent()
++{
++	return gSkillTraitValues.ubHWDamageTanksBonusPercent * SoldierNTraitLevel( HEAVY_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubHWDamageBonusPercentForHW()
++{
++	return gSkillTraitValues.ubHWDamageBonusPercentForHW * SoldierNTraitLevel( HEAVY_WEAPONS_NT );
++}
++
++UINT8 SoldierTraits::ubSNBonusCtHRifles()
++{
++	return gSkillTraitValues.ubSNBonusCtHRifles * SoldierNTraitLevel( SNIPER_NT );
++}
++
++UINT8 SoldierTraits::ubSNBonusCtHSniperRifles()
++{
++	return gSkillTraitValues.ubSNBonusCtHSniperRifles * SoldierNTraitLevel( SNIPER_NT );
++}
++
++UINT8 SoldierTraits::ubSNEffRangeToTargetReduction()
++{
++	return gSkillTraitValues.ubSNEffRangeToTargetReduction * SoldierNTraitLevel( SNIPER_NT );
++}
++
++UINT8 SoldierTraits::ubSNAimingBonusPerClick()
++{
++	return gSkillTraitValues.ubSNAimingBonusPerClick * SoldierNTraitLevel( SNIPER_NT );
++}
++
++UINT8 SoldierTraits::ubSNDamageBonusPerClick()
++{
++	return gSkillTraitValues.ubSNDamageBonusPerClick * SoldierNTraitLevel( SNIPER_NT );
++}
++
++UINT8 SoldierTraits::ubSNDamageBonusFromNumClicks()
++{
++	return gSkillTraitValues.ubSNDamageBonusFromNumClicks * SoldierNTraitLevel( SNIPER_NT );
++}
++
++UINT8 SoldierTraits::ubSNChamberRoundAPsReduction()
++{
++	return gSkillTraitValues.ubSNChamberRoundAPsReduction * SoldierNTraitLevel( SNIPER_NT );
++}
++
++UINT8 SoldierTraits::ubSNAimClicksAdded()
++{
++	return gSkillTraitValues.ubSNAimClicksAdded * SoldierNTraitLevel( SNIPER_NT );
++}
++
++UINT8 SoldierTraits::ubSNFocusRadius()
++{
++	return gSkillTraitValues.ubSNFocusRadius * SoldierNTraitLevel( SNIPER_NT );
++}
++
++INT16 SoldierTraits::sSNFocusInterruptBonus()
++{
++	return gSkillTraitValues.sSNFocusInterruptBonus * SoldierNTraitLevel( SNIPER_NT );
++}
++
++UINT8 SoldierTraits::ubRABonusCtHRifles()
++{
++	return gSkillTraitValues.ubRABonusCtHRifles * SoldierNTraitLevel( RANGER_NT );
++}
++
++UINT8 SoldierTraits::ubRABonusCtHShotguns()
++{
++	return gSkillTraitValues.ubRABonusCtHShotguns * SoldierNTraitLevel( RANGER_NT );
++}
++
++UINT8 SoldierTraits::ubRAPumpShotgunsAPsReduction()
++{
++	return gSkillTraitValues.ubRAPumpShotgunsAPsReduction * SoldierNTraitLevel( RANGER_NT );
++}
++
++UINT8 SoldierTraits::ubRAFiringSpeedBonusShotguns()
++{
++	return gSkillTraitValues.ubRAFiringSpeedBonusShotguns * SoldierNTraitLevel( RANGER_NT );
++}
++
++UINT8 SoldierTraits::ubRAAimClicksAdded()
++{
++	return gSkillTraitValues.ubRAAimClicksAdded * SoldierNTraitLevel( RANGER_NT );
++}
++
++UINT8 SoldierTraits::ubRAEffectiveRangeBonusShotguns()
++{
++	return gSkillTraitValues.ubRAEffectiveRangeBonusShotguns * SoldierNTraitLevel( RANGER_NT );
++}
++
++UINT8 SoldierTraits::ubRAReloadSpeedShotgunsManual()
++{
++	return gSkillTraitValues.ubRAReloadSpeedShotgunsManual * SoldierNTraitLevel( RANGER_NT );
++}
++
++UINT8 SoldierTraits::ubGSFiringSpeedBonusPistols()
++{
++	return gSkillTraitValues.ubGSFiringSpeedBonusPistols * SoldierNTraitLevel( GUNSLINGER_NT );
++}
++
++UINT8 SoldierTraits::ubGSEffectiveRangeBonusPistols()
++{
++	return gSkillTraitValues.ubGSEffectiveRangeBonusPistols * SoldierNTraitLevel( GUNSLINGER_NT );
++}
++
++UINT8 SoldierTraits::ubGSBonusCtHPistols()
++{
++	return gSkillTraitValues.ubGSBonusCtHPistols * SoldierNTraitLevel( GUNSLINGER_NT );
++}
++
++UINT8 SoldierTraits::ubGSBonusCtHMachinePistols()
++{
++	return gSkillTraitValues.ubGSBonusCtHMachinePistols * SoldierNTraitLevel( GUNSLINGER_NT );
++}
++
++UINT8 SoldierTraits::ubGSCtHMPExcludeAuto()
++{
++	return gSkillTraitValues.ubGSCtHMPExcludeAuto * SoldierNTraitLevel( GUNSLINGER_NT );
++}
++
++UINT8 SoldierTraits::ubGSAimingBonusPerClick()
++{
++	return gSkillTraitValues.ubGSAimingBonusPerClick * SoldierNTraitLevel( GUNSLINGER_NT );
++}
++
++UINT8 SoldierTraits::ubGSPercentReadyPistolsReduction()
++{
++	return gSkillTraitValues.ubGSPercentReadyPistolsReduction * SoldierNTraitLevel( GUNSLINGER_NT );
++}
++
++UINT8 SoldierTraits::ubGSRealoadSpeedHandgunsBonus()
++{
++	return gSkillTraitValues.ubGSRealoadSpeedHandgunsBonus * SoldierNTraitLevel( GUNSLINGER_NT );
++}
++
++UINT8 SoldierTraits::ubGSAimClicksAdded()
++{
++	return gSkillTraitValues.ubGSAimClicksAdded * SoldierNTraitLevel( GUNSLINGER_NT );
++}
++
++UINT8 SoldierTraits::ubMAPunchAPsReduction()
++{
++	return gSkillTraitValues.ubMAPunchAPsReduction * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMABonusCtHBareHands()
++{
++	return gSkillTraitValues.ubMABonusCtHBareHands * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMABonusCtHBrassKnuckles()
++{
++	return gSkillTraitValues.ubMABonusCtHBrassKnuckles * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMABonusDamageHandToHand()
++{
++	return gSkillTraitValues.ubMABonusDamageHandToHand * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMABonusBreathDamageHandToHand()
++{
++	return gSkillTraitValues.ubMABonusBreathDamageHandToHand * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT16 SoldierTraits::usMALostBreathRegainPenalty()
++{
++	return gSkillTraitValues.usMALostBreathRegainPenalty * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT16 SoldierTraits::usMAAimedPunchDamageBonus()
++{
++	return gSkillTraitValues.usMAAimedPunchDamageBonus * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++INT8 SoldierTraits::bMAAimedPunchCtHModifier()
++{
++	return gSkillTraitValues.bMAAimedPunchCtHModifier * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMAChanceToDodgeHtH()
++{
++	return gSkillTraitValues.ubMAChanceToDodgeHtH * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMAOnTopCTDHtHBareHanded()
++{
++	return gSkillTraitValues.ubMAOnTopCTDHtHBareHanded * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMAOnTopCTDHtHBrassKnuckles()
++{
++	return gSkillTraitValues.ubMAOnTopCTDHtHBrassKnuckles * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMAChanceToDodgeMelee()
++{
++	return gSkillTraitValues.ubMAChanceToDodgeMelee * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMAReducedAPsToSteal()
++{
++	return gSkillTraitValues.ubMAReducedAPsToSteal * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMAAPsChangeStanceReduction()
++{
++	return gSkillTraitValues.ubMAAPsChangeStanceReduction * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMAApsTurnAroundReduction()
++{
++	return gSkillTraitValues.ubMAApsTurnAroundReduction * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMAAPsClimbOrJumpReduction()
++{
++	return gSkillTraitValues.ubMAAPsClimbOrJumpReduction * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMAReducedAPsRegisteredWhenMoving()
++{
++	return gSkillTraitValues.ubMAReducedAPsRegisteredWhenMoving * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT8 SoldierTraits::ubMAChanceToCkickDoors()
++{
++	return gSkillTraitValues.ubMAChanceToCkickDoors * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++BOOLEAN SoldierTraits::fPermitExtraAnimationsOnlyToMA()
++{
++	return gSkillTraitValues.fPermitExtraAnimationsOnlyToMA * SoldierNTraitLevel( MARTIAL_ARTS_NT );
++}
++
++UINT16 SoldierTraits::usSLRadiusNormal()
++{
++	return gSkillTraitValues.usSLRadiusNormal * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT16 SoldierTraits::usSLRadiusExtendedEar()
++{
++	return gSkillTraitValues.usSLRadiusExtendedEar * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT8 SoldierTraits::ubSLMaxBonuses()
++{
++	return gSkillTraitValues.ubSLMaxBonuses * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT8 SoldierTraits::ubSLBonusAPsPercent()
++{
++	return gSkillTraitValues.ubSLBonusAPsPercent * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT8 SoldierTraits::ubSLEffectiveLevelInRadius()
++{
++	return gSkillTraitValues.ubSLEffectiveLevelInRadius * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT8 SoldierTraits::ubSLEffectiveLevelAsStandby()
++{
++	return gSkillTraitValues.ubSLEffectiveLevelAsStandby * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT8 SoldierTraits::ubSLCollectiveInterruptsBonus()
++{
++	return gSkillTraitValues.ubSLCollectiveInterruptsBonus * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT8 SoldierTraits::ubSLOverallSuppresionBonusPercent()
++{
++	return gSkillTraitValues.ubSLOverallSuppresionBonusPercent * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT8 SoldierTraits::ubSLMoraleGainBonus()
++{
++	return gSkillTraitValues.ubSLMoraleGainBonus * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT8 SoldierTraits::ubSLMoraleLossReduction()
++{
++	return gSkillTraitValues.ubSLMoraleLossReduction * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT8 SoldierTraits::ubSLFearResistance()
++{
++	return gSkillTraitValues.ubSLFearResistance * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT8 SoldierTraits::ubSLDeathMoralelossMultiplier()
++{
++	return gSkillTraitValues.ubSLDeathMoralelossMultiplier * SoldierNTraitLevel( SQUADLEADER_NT );
++}
++
++UINT16 SoldierTraits::usTERepairSpeedBonus()
++{
++	return gSkillTraitValues.usTERepairSpeedBonus * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++UINT16 SoldierTraits::usTELockpickingBonus()
++{
++	return gSkillTraitValues.usTELockpickingBonus * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++UINT16 SoldierTraits::usTEDisarmElTrapBonus()
++{
++	return gSkillTraitValues.usTEDisarmElTrapBonus * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++UINT16 SoldierTraits::usTEAttachingItemsBonus()
++{
++	return gSkillTraitValues.usTEAttachingItemsBonus * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++UINT8 SoldierTraits::ubTEUnjamGunBonus()
++{
++	return gSkillTraitValues.ubTEUnjamGunBonus * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++UINT8 SoldierTraits::ubTERepairElectronicsPenaltyReduction()
++{
++	return gSkillTraitValues.ubTERepairElectronicsPenaltyReduction * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++UINT8 SoldierTraits::ubTEChanceToDetectTrapsBonus()
++{
++	return gSkillTraitValues.ubTEChanceToDetectTrapsBonus * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++UINT8 SoldierTraits::ubTECtHControlledRobotBonus()
++{
++	return gSkillTraitValues.ubTECtHControlledRobotBonus * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++UINT8 SoldierTraits::ubTETraitsNumToRepairRobot()
++{
++	return gSkillTraitValues.ubTETraitsNumToRepairRobot * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++UINT8 SoldierTraits::ubTERepairRobotPenaltyReduction()
++{
++	return gSkillTraitValues.ubTERepairRobotPenaltyReduction * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++BOOLEAN SoldierTraits::fTETraitsCanRestoreItemThreshold()
++{
++	return gSkillTraitValues.fTETraitsCanRestoreItemThreshold * SoldierNTraitLevel( TECHNICIAN_NT );
++}
++
++UINT8 SoldierTraits::ubDONumberTraitsNeededForSurgery()
++{
++	return gSkillTraitValues.ubDONumberTraitsNeededForSurgery * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT8 SoldierTraits::ubDOSurgeryHealPercentBase()
++{
++	return gSkillTraitValues.ubDOSurgeryHealPercentBase * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT8 SoldierTraits::ubDOSurgeryHealPercentOnTop()
++{
++	return gSkillTraitValues.ubDOSurgeryHealPercentOnTop * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT8 SoldierTraits::ubDOSurgeryHealPercentBloodbag()
++{
++	return gSkillTraitValues.ubDOSurgeryHealPercentBloodbag * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT16 SoldierTraits::usDOSurgeryMedBagConsumption()
++{
++	return gSkillTraitValues.usDOSurgeryMedBagConsumption * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT16 SoldierTraits::usDOSurgeryMaxBreathLoss()
++{
++	return gSkillTraitValues.usDOSurgeryMaxBreathLoss * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT16 SoldierTraits::usDORepairStatsRateBasic()
++{
++	return gSkillTraitValues.usDORepairStatsRateBasic * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT16 SoldierTraits::usDORepairStatsRateOnTop()
++{
++	return gSkillTraitValues.usDORepairStatsRateOnTop * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT8 SoldierTraits::ubDORepStPenaltyIfAlsoHealing()
++{
++	return gSkillTraitValues.ubDORepStPenaltyIfAlsoHealing * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT8 SoldierTraits::ubDOHealingPenaltyIfAlsoStatRepair()
++{
++	return gSkillTraitValues.ubDOHealingPenaltyIfAlsoStatRepair * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++BOOLEAN SoldierTraits::fDORepStShouldThrowMessage()
++{
++	return gSkillTraitValues.fDORepStShouldThrowMessage * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT16 SoldierTraits::usDODoctorAssignmentBonus()
++{
++	return gSkillTraitValues.usDODoctorAssignmentBonus * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT8 SoldierTraits::ubDOBandagingSpeedPercent()
++{
++	return gSkillTraitValues.ubDOBandagingSpeedPercent * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT8 SoldierTraits::ubDONaturalRegenBonus()
++{
++	return gSkillTraitValues.ubDONaturalRegenBonus * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT8 SoldierTraits::ubDOMaxRegenBonuses()
++{
++	return gSkillTraitValues.ubDOMaxRegenBonuses * SoldierNTraitLevel( DOCTOR_NT );
++}
++
++UINT8 SoldierTraits::ubAMPenaltyDoubleReduction()
++{
++	return gSkillTraitValues.ubAMPenaltyDoubleReduction * SoldierNTraitLevel( AMBIDEXTROUS_NT );
++}
++
++UINT8 SoldierTraits::ubAMReloadSpeedMagazines()
++{
++	return gSkillTraitValues.ubAMReloadSpeedMagazines * SoldierNTraitLevel( AMBIDEXTROUS_NT );
++}
++
++UINT8 SoldierTraits::ubAMReloadSpeedLoose()
++{
++	return gSkillTraitValues.ubAMReloadSpeedLoose * SoldierNTraitLevel( AMBIDEXTROUS_NT );
++}
++
++UINT8 SoldierTraits::ubAMPickItemsAPsReduction()
++{
++	return gSkillTraitValues.ubAMPickItemsAPsReduction * SoldierNTraitLevel( AMBIDEXTROUS_NT );
++}
++
++UINT8 SoldierTraits::ubAMWorkBackpackAPsReduction()
++{
++	return gSkillTraitValues.ubAMWorkBackpackAPsReduction * SoldierNTraitLevel( AMBIDEXTROUS_NT );
++}
++
++UINT8 SoldierTraits::ubAMHandleDoorsAPsReduction()
++{
++	return gSkillTraitValues.ubAMHandleDoorsAPsReduction * SoldierNTraitLevel( AMBIDEXTROUS_NT );
++}
++
++UINT8 SoldierTraits::ubAMHandleBombsAPsReduction()
++{
++	return gSkillTraitValues.ubAMHandleBombsAPsReduction * SoldierNTraitLevel( AMBIDEXTROUS_NT );
++}
++
++UINT8 SoldierTraits::ubAMAttachingItemsAPsReduction()
++{
++	return gSkillTraitValues.ubAMAttachingItemsAPsReduction * SoldierNTraitLevel( AMBIDEXTROUS_NT );
++}
++
++UINT8 SoldierTraits::ubMEBladesAPsReduction()
++{
++	return gSkillTraitValues.ubMEBladesAPsReduction * SoldierNTraitLevel( MELEE_NT );
++}
++
++UINT8 SoldierTraits::ubMECtHBladesBonus()
++{
++	return gSkillTraitValues.ubMECtHBladesBonus * SoldierNTraitLevel( MELEE_NT );
++}
++
++UINT8 SoldierTraits::ubMECtHBluntBonus()
++{
++	return gSkillTraitValues.ubMECtHBluntBonus * SoldierNTraitLevel( MELEE_NT );
++}
++
++UINT8 SoldierTraits::ubMEDamageBonusBlades()
++{
++	return gSkillTraitValues.ubMEDamageBonusBlades * SoldierNTraitLevel( MELEE_NT );
++}
++
++UINT8 SoldierTraits::ubMEDamageBonusBlunt()
++{
++	return gSkillTraitValues.ubMEDamageBonusBlunt * SoldierNTraitLevel( MELEE_NT );
++}
++
++UINT16 SoldierTraits::usMEAimedMeleeAttackDamageBonus()
++{
++	return gSkillTraitValues.usMEAimedMeleeAttackDamageBonus * SoldierNTraitLevel( MELEE_NT );
++}
++
++UINT8 SoldierTraits::ubMEDodgeBladesBonus()
++{
++	return gSkillTraitValues.ubMEDodgeBladesBonus * SoldierNTraitLevel( MELEE_NT );
++}
++
++UINT8 SoldierTraits::ubMECtDBladesOnTopWithBladeInHands()
++{
++	return gSkillTraitValues.ubMECtDBladesOnTopWithBladeInHands * SoldierNTraitLevel( MELEE_NT );
++}
++
++UINT8 SoldierTraits::ubMEDodgeBluntBonus()
++{
++	return gSkillTraitValues.ubMEDodgeBluntBonus * SoldierNTraitLevel( MELEE_NT );
++}
++
++UINT8 SoldierTraits::ubMECtDBluntOnTopWithBladeInHands()
++{
++	return gSkillTraitValues.ubMECtDBluntOnTopWithBladeInHands * SoldierNTraitLevel( MELEE_NT );
++}
++
++UINT8 SoldierTraits::ubTHBladesAPsReduction()
++{
++	return gSkillTraitValues.ubTHBladesAPsReduction * SoldierNTraitLevel( THROWING_NT );
++}
++
++UINT8 SoldierTraits::ubTHBladesMaxRange()
++{
++	return gSkillTraitValues.ubTHBladesMaxRange * SoldierNTraitLevel( THROWING_NT );
++}
++
++UINT8 SoldierTraits::ubTHBladesCtHBonus()
++{
++	return gSkillTraitValues.ubTHBladesCtHBonus * SoldierNTraitLevel( THROWING_NT );
++}
++
++UINT8 SoldierTraits::ubTHBladesCtHBonusPerClick()
++{
++	return gSkillTraitValues.ubTHBladesCtHBonusPerClick * SoldierNTraitLevel( THROWING_NT );
++}
++
++UINT8 SoldierTraits::ubTHBladesDamageBonus()
++{
++	return gSkillTraitValues.ubTHBladesDamageBonus * SoldierNTraitLevel( THROWING_NT );
++}
++
++UINT8 SoldierTraits::ubTHBladesDamageBonusPerClick()
++{
++	return gSkillTraitValues.ubTHBladesDamageBonusPerClick * SoldierNTraitLevel( THROWING_NT );
++}
++
++UINT8 SoldierTraits::ubTHBladesSilentCriticalHitChance()
++{
++	return gSkillTraitValues.ubTHBladesSilentCriticalHitChance * SoldierNTraitLevel( THROWING_NT );
++}
++
++UINT8 SoldierTraits::ubTHBladesCriticalHitMultiplierBonus()
++{
++	return gSkillTraitValues.ubTHBladesCriticalHitMultiplierBonus * SoldierNTraitLevel( THROWING_NT );
++}
++
++UINT8 SoldierTraits::ubTHBladesAimClicksAdded()
++{
++	return gSkillTraitValues.ubTHBladesAimClicksAdded * SoldierNTraitLevel( THROWING_NT );
++}
++
++UINT8 SoldierTraits::ubNOeSightRangeBonusInDark()
++{
++	return gSkillTraitValues.ubNOeSightRangeBonusInDark * SoldierNTraitLevel( NIGHT_OPS_NT );
++}
++
++UINT8 SoldierTraits::ubNOHearingRangeBonus()
++{
++	return gSkillTraitValues.ubNOHearingRangeBonus * SoldierNTraitLevel( NIGHT_OPS_NT );
++}
++
++UINT8 SoldierTraits::ubNOHearingRangeBonusInDark()
++{
++	return gSkillTraitValues.ubNOHearingRangeBonusInDark * SoldierNTraitLevel( NIGHT_OPS_NT );
++}
++
++UINT8 SoldierTraits::ubNOIterruptsBonusInDark()
++{
++	return gSkillTraitValues.ubNOIterruptsBonusInDark * SoldierNTraitLevel( NIGHT_OPS_NT );
++}
++
++UINT8 SoldierTraits::ubNONeedForSleepReduction()
++{
++	return gSkillTraitValues.ubNONeedForSleepReduction * SoldierNTraitLevel( NIGHT_OPS_NT );
++}
++
++UINT8 SoldierTraits::ubSTStealthModeSpeedBonus()
++{
++	return gSkillTraitValues.ubSTStealthModeSpeedBonus * SoldierNTraitLevel( STEALTHY_NT );
++}
++
++UINT8 SoldierTraits::ubSTBonusToMoveQuietly()
++{
++	return gSkillTraitValues.ubSTBonusToMoveQuietly * SoldierNTraitLevel( STEALTHY_NT );
++}
++
++UINT8 SoldierTraits::ubSTStealthBonus()
++{
++	return gSkillTraitValues.ubSTStealthBonus * SoldierNTraitLevel( STEALTHY_NT );
++}
++
++UINT8 SoldierTraits::ubSTReducedAPsRegistered()
++{
++	return gSkillTraitValues.ubSTReducedAPsRegistered * SoldierNTraitLevel( STEALTHY_NT );
++}
++
++UINT8 SoldierTraits::ubSTStealthPenaltyForMovingReduction()
++{
++	return gSkillTraitValues.ubSTStealthPenaltyForMovingReduction * SoldierNTraitLevel( STEALTHY_NT );
++}
++
++UINT8 SoldierTraits::ubATAPsMovementReduction()
++{
++	return gSkillTraitValues.ubATAPsMovementReduction * SoldierNTraitLevel( ATHLETICS_NT );
++}
++
++UINT8 SoldierTraits::ubATBPsMovementReduction()
++{
++	return gSkillTraitValues.ubATBPsMovementReduction * SoldierNTraitLevel( ATHLETICS_NT );
++}
++
++UINT8 SoldierTraits::ubBBDamageResistance()
++{
++	return gSkillTraitValues.ubBBDamageResistance * SoldierNTraitLevel( BODYBUILDING_NT );
++}
++
++UINT8 SoldierTraits::ubBBCarryWeightBonus()
++{
++	return gSkillTraitValues.ubBBCarryWeightBonus * SoldierNTraitLevel( BODYBUILDING_NT );
++}
++
++UINT8 SoldierTraits::ubBBBreathLossForHtHImpactReduction()
++{
++	return gSkillTraitValues.ubBBBreathLossForHtHImpactReduction * SoldierNTraitLevel( BODYBUILDING_NT );
++}
++
++UINT16 SoldierTraits::usBBIncreasedNeededDamageToFallDown()
++{
++	return gSkillTraitValues.usBBIncreasedNeededDamageToFallDown * SoldierNTraitLevel( BODYBUILDING_NT );
++}
++
++UINT8 SoldierTraits::ubDEAPsNeededToThrowGrenadesReduction()
++{
++	return gSkillTraitValues.ubDEAPsNeededToThrowGrenadesReduction * SoldierNTraitLevel( DEMOLITIONS_NT );
++}
++
++UINT8 SoldierTraits::ubDEMaxRangeToThrowGrenades()
++{
++	return gSkillTraitValues.ubDEMaxRangeToThrowGrenades * SoldierNTraitLevel( DEMOLITIONS_NT );
++}
++
++UINT8 SoldierTraits::ubDECtHWhenThrowingGrenades()
++{
++	return gSkillTraitValues.ubDECtHWhenThrowingGrenades * SoldierNTraitLevel( DEMOLITIONS_NT );
++}
++
++UINT8 SoldierTraits::ubDEDamageOfBombsAndMines()
++{
++	return gSkillTraitValues.ubDEDamageOfBombsAndMines * SoldierNTraitLevel( DEMOLITIONS_NT );
++}
++
++UINT8 SoldierTraits::ubDEAttachDetonatorCheckBonus()
++{
++	return gSkillTraitValues.ubDEAttachDetonatorCheckBonus * SoldierNTraitLevel( DEMOLITIONS_NT );
++}
++
++UINT8 SoldierTraits::ubDEPlantAndRemoveBombCheckBonus()
++{
++	return gSkillTraitValues.ubDEPlantAndRemoveBombCheckBonus * SoldierNTraitLevel( DEMOLITIONS_NT );
++}
++
++UINT8 SoldierTraits::ubDEPlacedBombLevelBonus()
++{
++	return gSkillTraitValues.ubDEPlacedBombLevelBonus * SoldierNTraitLevel( DEMOLITIONS_NT );
++}
++
++UINT8 SoldierTraits::ubDEShapedChargeDamageMultiplier()
++{
++	return gSkillTraitValues.ubDEShapedChargeDamageMultiplier * SoldierNTraitLevel( DEMOLITIONS_NT );
++}
++
++UINT8 SoldierTraits::ubTGBonusToTrainMilitia()
++{
++	return gSkillTraitValues.ubTGBonusToTrainMilitia * SoldierNTraitLevel( TEACHING_NT );
++}
++
++UINT8 SoldierTraits::ubTGEffectiveLDRToTrainMilitia()
++{
++	return gSkillTraitValues.ubTGEffectiveLDRToTrainMilitia * SoldierNTraitLevel( TEACHING_NT );
++}
++
++UINT8 SoldierTraits::ubTGBonusToTeachOtherMercs()
++{
++	return gSkillTraitValues.ubTGBonusToTeachOtherMercs * SoldierNTraitLevel( TEACHING_NT );
++}
++
++UINT8 SoldierTraits::ubTGEffectiveSkillValueForTeaching()
++{
++	return gSkillTraitValues.ubTGEffectiveSkillValueForTeaching * SoldierNTraitLevel( TEACHING_NT );
++}
++
++UINT8 SoldierTraits::ubTGBonusOnPractising()
++{
++	return gSkillTraitValues.ubTGBonusOnPractising * SoldierNTraitLevel( TEACHING_NT );
++}
++
++UINT8 SoldierTraits::ubSCSightRangebonusWithScopes()
++{
++	return gSkillTraitValues.ubSCSightRangebonusWithScopes * SoldierNTraitLevel( SCOUTING_NT );
++}
++
++UINT16 SoldierTraits::usSCSightRangebonusWithBinoculars()
++{
++	return gSkillTraitValues.usSCSightRangebonusWithBinoculars * SoldierNTraitLevel( SCOUTING_NT );
++}
++
++UINT8 SoldierTraits::ubSCTunnelVisionReducedWithBinoculars()
++{
++	return gSkillTraitValues.ubSCTunnelVisionReducedWithBinoculars * SoldierNTraitLevel( SCOUTING_NT );
++}
++
++BOOLEAN SoldierTraits::fSCCanDetectEnemyPresenseAround()
++{
++	return gSkillTraitValues.fSCCanDetectEnemyPresenseAround * SoldierNTraitLevel( SCOUTING_NT );
++}
++
++BOOLEAN SoldierTraits::fSCCanDetermineEnemyNumbersAround()
++{
++	return gSkillTraitValues.fSCCanDetermineEnemyNumbersAround * SoldierNTraitLevel( SCOUTING_NT );
++}
++
++BOOLEAN SoldierTraits::fSCDetectionInDiagonalSectors()
++{
++	return gSkillTraitValues.fSCDetectionInDiagonalSectors * SoldierNTraitLevel( SCOUTING_NT );
++}
++
++BOOLEAN SoldierTraits::fSCPreventsTheEnemyToAmbushMercs()
++{
++	return gSkillTraitValues.fSCPreventsTheEnemyToAmbushMercs * SoldierNTraitLevel( SCOUTING_NT );
++}
++
++BOOLEAN SoldierTraits::fSCPreventsBloodcatsAmbushes()
++{
++	return gSkillTraitValues.fSCPreventsBloodcatsAmbushes * SoldierNTraitLevel( SCOUTING_NT );
++}
++
++BOOLEAN SoldierTraits::fSCThrowMessageIfAmbushPrevented()
++{
++	return gSkillTraitValues.fSCThrowMessageIfAmbushPrevented * SoldierNTraitLevel( SCOUTING_NT );
++}
++
++INT16 SoldierTraits::sCOMeleeCTHBonus()
++{
++	return gSkillTraitValues.sCOMeleeCTHBonus * SoldierNTraitLevel( COVERT_NT );
++}
++
++INT16 SoldierTraits::sCoMeleeInstakillBonus()
++{
++	return gSkillTraitValues.sCoMeleeInstakillBonus * SoldierNTraitLevel( COVERT_NT );
++}
++
++INT16 SoldierTraits::sCODisguiseAPReduction()
++{
++	return gSkillTraitValues.sCODisguiseAPReduction * SoldierNTraitLevel( COVERT_NT );
++}
++
++INT16 SoldierTraits::sCOCloseDetectionRange()
++{
++	return gSkillTraitValues.sCOCloseDetectionRange * SoldierNTraitLevel( COVERT_NT );
++}
++
++INT16 SoldierTraits::sCOCloseDetectionRangeSoldierCorpse()
++{
++	return gSkillTraitValues.sCOCloseDetectionRangeSoldierCorpse * SoldierNTraitLevel( COVERT_NT );
++}
++
++UINT16 SoldierTraits::usCOEliteUncoverRadius()
++{
++	return gSkillTraitValues.usCOEliteUncoverRadius * SoldierNTraitLevel( COVERT_NT );
++}
++
++BOOLEAN SoldierTraits::fCODetectIfBleeding()
++{
++	return gSkillTraitValues.fCODetectIfBleeding * SoldierNTraitLevel( COVERT_NT );
++}
++
++BOOLEAN SoldierTraits::fCOStripIfUncovered()
++{
++	return gSkillTraitValues.fCOStripIfUncovered * SoldierNTraitLevel( COVERT_NT );
++}
++
++BOOLEAN SoldierTraits::fROAllowArtillery()
++{
++	return gSkillTraitValues.fROAllowArtillery * SoldierNTraitLevel( RADIO_OPERATOR_NT );
++}
++
++BOOLEAN SoldierTraits::fROArtilleryDistributedOverTurns()
++{
++	return gSkillTraitValues.fROArtilleryDistributedOverTurns * SoldierNTraitLevel( RADIO_OPERATOR_NT );
++}
++
++UINT8 SoldierTraits::ubSNTBaseChance()
++{
++	return gSkillTraitValues.ubSNTBaseChance * SoldierNTraitLevel( SNITCH_NT );
++}
++
++BOOLEAN SoldierTraits::fSNTMercOpinionAboutSnitchBonusModifier()
++{
++	return gSkillTraitValues.fSNTMercOpinionAboutSnitchBonusModifier * SoldierNTraitLevel( SNITCH_NT );
++}
++
++BOOLEAN SoldierTraits::fSNTSnitchOpinionAboutMercBonusModifier()
++{
++	return gSkillTraitValues.fSNTSnitchOpinionAboutMercBonusModifier * SoldierNTraitLevel( SNITCH_NT );
++}
++
++BOOLEAN SoldierTraits::fSNTSnitchLeadershipBonusModifer()
++{
++	return gSkillTraitValues.fSNTSnitchLeadershipBonusModifer * SoldierNTraitLevel( SNITCH_NT );
++}
++
++INT8 SoldierTraits::bSNTSociableMercBonus()
++{
++	return gSkillTraitValues.bSNTSociableMercBonus * SoldierNTraitLevel( SNITCH_NT );
++}
++
++INT8 SoldierTraits::bSNTLonerMercBonus()
++{
++	return gSkillTraitValues.bSNTLonerMercBonus * SoldierNTraitLevel( SNITCH_NT );
++}
++
++INT8 SoldierTraits::bSNTSameAssignmentBonus()
++{
++	return gSkillTraitValues.bSNTSameAssignmentBonus * SoldierNTraitLevel( SNITCH_NT );
++}
++
++INT8 SoldierTraits::bSNTMercOpinionAboutMercTreshold()
++{
++	return gSkillTraitValues.bSNTMercOpinionAboutMercTreshold * SoldierNTraitLevel( SNITCH_NT );
++}
++
++UINT8 SoldierTraits::ubSNTPassiveReputationGain()
++{
++	return gSkillTraitValues.ubSNTPassiveReputationGain * SoldierNTraitLevel( SNITCH_NT );
++}
++
++UINT8 SoldierTraits::ubSNTHearingRangeBonus()
++{
++	return gSkillTraitValues.ubSNTHearingRangeBonus * SoldierNTraitLevel( SNITCH_NT );
++}
++
++BOOLEAN SoldierTraits::fSNTPrisonSnitchInterrogationMultiplier()
++{
++	return gSkillTraitValues.fSNTPrisonSnitchInterrogationMultiplier * SoldierNTraitLevel( SNITCH_NT );
++}
++
++BOOLEAN SoldierTraits::fSNTPrisonSnitchGuardStrengthMultiplier()
++{
++	return gSkillTraitValues.fSNTPrisonSnitchGuardStrengthMultiplier * SoldierNTraitLevel( SNITCH_NT );
++}
++
++UINT8 SoldierTraits::ubSVGroupTimeSpentForTravellingFoot()
++{
++	return gSkillTraitValues.ubSVGroupTimeSpentForTravellingFoot * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++UINT8 SoldierTraits::ubSVGroupTimeSpentForTravellingVehicle()
++{
++	return gSkillTraitValues.ubSVGroupTimeSpentForTravellingVehicle * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++UINT8 SoldierTraits::ubSVMaxBonusesToTravelSpeed()
++{
++	return gSkillTraitValues.ubSVMaxBonusesToTravelSpeed * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++UINT8 SoldierTraits::ubSVBreathForTravellingReduction()
++{
++	return gSkillTraitValues.ubSVBreathForTravellingReduction * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++FLOAT SoldierTraits::dSVWeatherPenaltiesReduction()
++{
++	return gSkillTraitValues.dSVWeatherPenaltiesReduction * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++UINT8 SoldierTraits::ubSVCamoWornountSpeedReduction()
++{
++	return gSkillTraitValues.ubSVCamoWornountSpeedReduction * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++UINT16 SoldierTraits::usSVTrackerMaxRange()
++{
++	return gSkillTraitValues.usSVTrackerMaxRange * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++UINT16 SoldierTraits::usSVTrackerAbility()
++{
++	return gSkillTraitValues.usSVTrackerAbility * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++UINT16 SoldierTraits::usSVDiseaseResistance()
++{
++	return gSkillTraitValues.usSVDiseaseResistance * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++INT16 SoldierTraits::sSVFoodConsumption()
++{
++	return gSkillTraitValues.sSVFoodConsumption * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++INT16 SoldierTraits::sSVDrinkConsumption()
++{
++	return gSkillTraitValues.sSVDrinkConsumption * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++UINT16 SoldierTraits::usSVSnakeDefense()
++{
++	return gSkillTraitValues.usSVSnakeDefense * SoldierNTraitLevel( SURVIVAL_NT );
++}
++
++INT8 SoldierTraits::StealthLevels()
++{
++	if ( gGameOptions.fNewTraitSystem )
++	{
++		return NUM_SKILL_TRAITS( pSoldier, STEALTHY_NT );
++	}
++	else
++	{
++		return NUM_SKILL_TRAITS( pSoldier, STEALTHY_OT );
++	}
++}
++
++INT8 SoldierTraits::HearingBonus()
++{
++	INT8 bHearing = 0;
++	if ( gGameOptions.fNewTraitSystem )
++	{
++		bHearing += pSoldier->traits.ubNOHearingRangeBonus();
++		bHearing += pSoldier->traits.ubSNTHearingRangeBonus();
++	}
++	else
++	{
++		if ( HAS_SKILL_TRAIT( pSoldier, NIGHTOPS_OT ) )
++			bHearing += 1 * NUM_SKILL_TRAITS( pSoldier, NIGHTOPS_OT );
++	}
++	return bHearing;
++}
++
++INT8 SoldierTraits::ExtraHearingBonus()
++{
++	INT8 bHearing = 0;
++	// yet another bonus for nighttime
++	// old/new traits check - SANDRO
++	if ( gGameOptions.fNewTraitSystem )
++	{
++		if ( HAS_SKILL_TRAIT( pSoldier, NIGHT_OPS_NT ) )
++			bHearing += gSkillTraitValues.ubNOHearingRangeBonusInDark;
++	}
++	else
++	{
++		if ( HAS_SKILL_TRAIT( pSoldier, NIGHTOPS_OT ) )
++			bHearing += 1 * NUM_SKILL_TRAITS( pSoldier, NIGHTOPS_OT );
++	}
++	return bHearing;
++}
++
++// traits, utils
++
++INT8 SoldierTraits::SoldierNTraitLevel( NTrait trait )
++{
++	if ( !gGameOptions.fNewTraitSystem )
++		return 0;
++
++	INT8 bNumberOfTraits = 0;
++	INT8 bNumMajorTraitsCounted = 0;
++	INT8 bMaxTraits = gSkillTraitValues.ubMaxNumberOfTraits;
++	INT8 bMaxMajorTraits = gSkillTraitValues.ubNumberOfMajorTraitsAllowed;
++
++	for ( INT8 bCnt = 0; bCnt < min( MAX_NUM_TRAITS, bMaxTraits ); ++bCnt )
++	{
++		NTrait otherTrait = (NTrait) pSoldier->stats.ubSkillTraits[bCnt];
++		if ( otherTrait == trait )
++		{
++			++bNumberOfTraits;
++		}
++
++		if ( HasMajorNTrait( otherTrait ) )
++			++bNumMajorTraitsCounted;
++
++		// if we exceeded the allowed number of major traits, ignore the rest of them
++		if ( bNumMajorTraitsCounted > min( NUM_MAJOR_TRAITS, bMaxMajorTraits ) )
++			break;
++	}
++
++	// cannot have more than one same minor trait
++	if ( !HasMajorNTrait( trait ) )
++		return ( min( 1, bNumberOfTraits ) );
++
++	return ( min( 2, bNumberOfTraits ) );
++}
++
++INT8 SoldierTraits::SoldierOTraitLevel( OTrait trait )
++{
++	if ( gGameOptions.fNewTraitSystem )
++		return 0;
++
++	INT8 bNumberOfTraits = 0;
++	INT8 bNumMajorTraitsCounted = 0;
++	INT8 bMaxTraits = gSkillTraitValues.ubMaxNumberOfTraits;
++	INT8 bMaxMajorTraits = gSkillTraitValues.ubNumberOfMajorTraitsAllowed;
++
++	if ( trait == (OTrait) pSoldier->stats.ubSkillTraits[0] )
++	{
++		++bNumberOfTraits;
++	}
++
++	if ( trait == (OTrait) pSoldier->stats.ubSkillTraits[1] )
++	{
++		++bNumberOfTraits;
++	}
++
++	if ( !HasMajorOTrait( trait ) )
++		return ( min( 1, bNumberOfTraits ) );
++
++	return ( bNumberOfTraits );
++}
++
++ProfileTraits::ProfileTraits( MERCPROFILESTRUCT* pProfile ) : pProfile( pProfile )
++{
++}
++
++void ProfileTraits::FillHelpText( CHAR16 sString[] )
++{
++	CHAR16 sTemp[20];
++
++	if ( gGameOptions.fNewTraitSystem ) // SANDRO - old/new traits check
++	{
++		UINT8 ubTempSkillArray[MAX_NUM_TRAITS];
++		INT8 bNumSkillTraits = 0;
++
++		// lets rearrange our skills to a temp array
++		// we also get the number of lines (skills) to be displayed 
++		for ( UINT8 ubCnt = 1; ubCnt < NUM_SKILLTRAITS_NT; ubCnt++ )
++		{
++			if ( pProfile->traits.ProfileNTraitLevel( (NTrait)ubCnt ) == 2 )
++			{
++				ubTempSkillArray[bNumSkillTraits] = ( ubCnt + NEWTRAIT_MERCSKILL_EXPERTOFFSET );
++				bNumSkillTraits++;
++			}
++			else if ( pProfile->traits.ProfileNTraitLevel( (NTrait)ubCnt ) == 1 )
++			{
++				ubTempSkillArray[bNumSkillTraits] = ubCnt;
++				bNumSkillTraits++;
++			}
++		}
++
++		if ( bNumSkillTraits == 0 )
++		{
++			swprintf( sString, L"%s", pPersonnelScreenStrings[PRSNL_TXT_NOSKILLS] );
++		}
++		else
++		{
++			for ( UINT8 ubCnt = 0; ubCnt < bNumSkillTraits; ubCnt++ )
++			{
++				swprintf( sTemp, L"%s\n", gzMercSkillTextNew[ubTempSkillArray[ubCnt]] );
++				wcscat( sString, sTemp );
++			}
++		}
++	}
++	else
++	{
++		INT8 bSkill1 = 0, bSkill2 = 0;
++		bSkill1 = pProfile->bSkillTraits[0];
++		bSkill2 = pProfile->bSkillTraits[1];
++
++		if ( bSkill1 == 0 && bSkill2 == 0 )
++		{
++			swprintf( sString, L"%s", pPersonnelScreenStrings[PRSNL_TXT_NOSKILLS] );
++		}
++		else
++		{
++			//if the 2 skills are the same, add the '(expert)' at the end
++			if ( bSkill1 == bSkill2 )
++			{
++				swprintf( sString, L"%s %s", gzMercSkillText[bSkill1], gzMercSkillText[EXPERT] );
++			}
++			else
++			{
++				//Display the first skill
++				if ( bSkill1 != 0 )
++				{
++					swprintf( sString, L"%s\n", gzMercSkillText[bSkill1] );
++				}
++				if ( bSkill2 != 0 )
++				{
++					swprintf( sTemp, L"%s", gzMercSkillText[bSkill2] );
++					wcscat( sString, sTemp );
++				}
++			}
++		}
++	}
++}
++
++INT8 ProfileTraits::ProfileNTraitLevel( NTrait trait )
++{
++	if ( !gGameOptions.fNewTraitSystem )
++		return 0;
++
++	INT8 bNumTraits = 0;
++	INT8 bNumMajorTraitsCounted = 0;
++	INT8 bMaxTraits = gSkillTraitValues.ubMaxNumberOfTraits;
++	INT8 bMaxMajorTraits = gSkillTraitValues.ubNumberOfMajorTraitsAllowed;
++
++	for ( INT8 bCnt = 0; bCnt < bMaxTraits; ++bCnt )
++	{
++		NTrait otherTrait = (NTrait)pProfile->bSkillTraits[bCnt];
++		if ( otherTrait == trait )
++			++bNumTraits;
++
++		if ( HasMajorNTrait( otherTrait ) )
++			++bNumMajorTraitsCounted;
++
++		// if we exceeded the allowed number of major traits, ignore the rest of them
++		if ( bNumMajorTraitsCounted > bMaxMajorTraits )
++			break;
++	}
++
++	if ( HasMajorNTrait( trait ) )
++		return ( min( 2, bNumTraits ) );
++
++	return ( min( 1, bNumTraits ) );
++}
++
++
++INT8 ProfileTraits::ProfileOTraitLevel( OTrait trait )
++{
++	if ( gGameOptions.fNewTraitSystem )
++		return 0;
++
++	INT8 bNumTraits = 0;
++	INT8 bNumMajorTraitsCounted = 0;
++	INT8 bMaxTraits = gSkillTraitValues.ubMaxNumberOfTraits;
++	INT8 bMaxMajorTraits = gSkillTraitValues.ubNumberOfMajorTraitsAllowed;
++
++	if ( pProfile->bSkillTraits[0] == trait )
++		++bNumTraits;
++
++	if ( pProfile->bSkillTraits[1] == trait )
++		++bNumTraits;
++
++	if ( HasMajorOTrait( trait ) )
++		return ( min( 1, bNumTraits ) );
++
++	return ( bNumTraits );
++}
++
++BOOLEAN HasMajorNTrait( NTrait trait )
++{
++	if ( trait == NO_SKILLTRAIT_NT )
++		return FALSE;
++
++	// traits below DOCTOR_NT are all major
++	if ( trait <= DOCTOR_NT )
++		return TRUE;
++
++	// covert ops is a major trait that is in a different location
++	if ( trait == COVERT_NT )
++		return TRUE;
++
++	return FALSE;
++}
++
++BOOLEAN HasMajorOTrait( OTrait trait )
++{
++	if ( trait == NO_SKILLTRAIT_OT )
++		return FALSE;
++
++	if ( trait == ELECTRONICS_OT ||
++		trait == AMBIDEXT_OT ||
++		trait == CAMOUFLAGED_OT )
++		return FALSE;
++	return TRUE;
++}
++
++BOOLEAN TwoStagedOldImpTrait( UINT8 uiSkillTraitNumber )
++{
++	if ( uiSkillTraitNumber == IMP_SKILL_TRAITS__ELECTRONICS ||
++		uiSkillTraitNumber == IMP_SKILL_TRAITS__AMBIDEXTROUS ||
++		uiSkillTraitNumber == IMP_SKILL_TRAITS__CAMO )
++		return FALSE;
++	return TRUE;
++}
++
++// deprecated due to magic not allowing static analysis
++BOOLEAN HAS_SKILL_TRAIT( SOLDIERTYPE* pSoldier, UINT8 uiSkillTraitNumber )
++{
++	if ( pSoldier == NULL || uiSkillTraitNumber == NO_SKILLTRAIT_NT )
++		return FALSE;
++
++	// Flugente: compatibility with skills
++	if ( uiSkillTraitNumber == INTEL || uiSkillTraitNumber == VARIOUSSKILLS )
++		return TRUE;
++
++	// check old/new traits
++	if ( gGameOptions.fNewTraitSystem )
++	{
++		return pSoldier->traits.SoldierNTraitLevel( (NTrait)uiSkillTraitNumber ) > 0;
++	}
++	else
++	{
++		return pSoldier->traits.SoldierOTraitLevel( (OTrait)uiSkillTraitNumber ) > 0;
++	}
++
++	return( FALSE );
++}
++
++// deprecated due to magic not allowing static analysis
++INT8 NUM_SKILL_TRAITS( SOLDIERTYPE* pSoldier, UINT8 uiSkillTraitNumber )
++{
++	if ( pSoldier == NULL || uiSkillTraitNumber == NO_SKILLTRAIT_NT )
++		return 0;
++
++	// check old/new traits
++	if ( gGameOptions.fNewTraitSystem )
++	{
++		return pSoldier->traits.SoldierNTraitLevel( (NTrait)uiSkillTraitNumber );
++	}
++	else
++	{
++		return pSoldier->traits.SoldierOTraitLevel( (OTrait)uiSkillTraitNumber );
++	}
++}
+\ No newline at end of file
+diff --git Tactical/Traits.h Tactical/Traits.h
+new file mode 100644
+index 00000000..8991b578
+--- /dev/null
++++ Tactical/Traits.h
+@@ -0,0 +1,340 @@
++#ifndef __TRAITS_H
++#define __TRAITS_H
++
++// SANDRO - replaced this list to represent the old traits only
++typedef enum
++{
++	NO_SKILLTRAIT_OT = 0,
++	LOCKPICKING_OT,
++	HANDTOHAND_OT,
++	ELECTRONICS_OT,
++	NIGHTOPS_OT,
++	THROWING_OT,
++	TEACHING_OT,
++	HEAVY_WEAPS_OT,
++	AUTO_WEAPS_OT,
++	STEALTHY_OT,
++	AMBIDEXT_OT,
++	THIEF_OT,
++	MARTIALARTS_OT,
++	KNIFING_OT,
++	PROF_SNIPER_OT,
++	CAMOUFLAGED_OT,
++	// SANDRO - I dared to remove these for it is really useless,
++	//   with the camo removing/repainting feature you only need the basic camouflage trait anyway
++	//CAMOUFLAGED_URBAN,
++	//CAMOUFLAGED_DESERT,
++	//CAMOUFLAGED_SNOW,
++	EXPERT,
++	NUM_SKILLTRAITS_OT
++} OTrait;
++
++//////////////////////////////////////////////////////////////////////
++// SANDRO - the list for new traits
++typedef enum
++{
++	NO_SKILLTRAIT_NT = 0,
++	// MAJOR TRAITS
++	AUTO_WEAPONS_NT = 1,
++	HEAVY_WEAPONS_NT = 2,
++	SNIPER_NT = 3,
++	RANGER_NT = 4,
++	GUNSLINGER_NT = 5,
++	MARTIAL_ARTS_NT = 6,
++	SQUADLEADER_NT = 7,
++	TECHNICIAN_NT = 8,
++	DOCTOR_NT = 9,
++	// MINOR TRAITS
++	AMBIDEXTROUS_NT = 10,
++	MELEE_NT = 11,
++	THROWING_NT = 12,
++	NIGHT_OPS_NT = 13,
++	STEALTHY_NT = 14,
++	ATHLETICS_NT = 15,
++	BODYBUILDING_NT = 16,
++	DEMOLITIONS_NT = 17,
++	TEACHING_NT = 18,
++	SCOUTING_NT = 19,
++
++	// Flugente: new traits have to go here, even if they are major traits, as otherwise the existing traits in profiles get mixed up
++	COVERT_NT = 20,	// a major trait
++	RADIO_OPERATOR_NT = 21,		// a minor trait
++	SNITCH_NT = 22,		// a minor trait 
++	SURVIVAL_NT = 23,	// a minor trait
++
++	NUM_SKILLTRAITS_NT
++} NTrait;
++
++#define NUM_MAJOR_TRAITS 10
++#define NUM_MINOR_TRAITS 13
++
++// save game relevant, so be careful when changing
++#define MAX_NUM_TRAITS 30
++
++#define NUM_ORIGINAL_MAJOR_TRAITS 9
++
++// Flugente: I've had it with this hardcoding madness. Without this, adding or removing a new trait would crash anything related to a bubblehelp display of traits
++// always check every use of these enums and every use of the skill-strings if you add a new trait
++#define NEWTRAIT_MERCSKILL_EXPERTOFFSET	(NUM_MAJOR_TRAITS + NUM_MINOR_TRAITS)
++#define NEWTRAIT_MERCSKILL_OFFSET_ALL	(NEWTRAIT_MERCSKILL_EXPERTOFFSET + NUM_MAJOR_TRAITS)
++
++// Flugente: these aren't really traits, but it is convenient to pretend so
++#define INTEL	(2 * NEWTRAIT_MERCSKILL_EXPERTOFFSET + 2)
++#define VARIOUSSKILLS	(INTEL + 1)
++
++class SOLDIERTYPE;
++class MERCPROFILESTRUCT;
++
++class SoldierTraits {
++public:
++	SoldierTraits( SOLDIERTYPE *pSoldier );
++
++	// traits, non-accessors
++
++	BOOLEAN HasMartialArtistSpecialAnimation( void );
++	BOOLEAN HasThrowingSpecialAnimation( void );
++	BOOLEAN HasRequiredNumberOfTraitsNeededForSurgery( void );
++	FLOAT BandagingSpeedFactorInPercent( void );
++	BOOLEAN HasFocus( void );
++	UINT8 HandcuffBonus( void );
++	FLOAT GetAttackAPMultiplier( OBJECTTYPE* pObj, UINT8 ubMode );
++
++	// traits, properties
++
++	UINT8 ubAWBonusCtHAssaultRifles( void );
++	UINT8 ubAWBonusCtHSMGs( void );
++	UINT8 ubAWBonusCtHLMGs( void );
++	UINT8 ubAWAutoFirePenaltyReduction( void );
++	UINT8 ubAWUnwantedBulletsReduction( void );
++	UINT8 ubAWFiringSpeedBonusLMGs( void );
++	UINT8 ubAWPercentReadyLMGReduction( void );
++	UINT8 ubHWGrenadeLaunchersAPsReduction( void );
++	UINT8 ubHWRocketLaunchersAPsReduction( void );
++	UINT8 ubHWBonusCtHGrenadeLaunchers( void );
++	UINT8 ubHWBonusCtHRocketLaunchers( void );
++	UINT8 ubHWMortarAPsReduction( void );
++	UINT8 ubHWMortarCtHPenaltyReduction( void );
++	UINT8 ubHWDamageTanksBonusPercent( void );
++	UINT8 ubHWDamageBonusPercentForHW( void );
++	UINT8 ubSNBonusCtHRifles( void );
++	UINT8 ubSNBonusCtHSniperRifles( void );
++	UINT8 ubSNEffRangeToTargetReduction( void );
++	UINT8 ubSNAimingBonusPerClick( void );
++	UINT8 ubSNDamageBonusPerClick( void );
++	UINT8 ubSNDamageBonusFromNumClicks( void );
++	UINT8 ubSNChamberRoundAPsReduction( void );
++	UINT8 ubSNAimClicksAdded( void );
++	UINT8 ubSNFocusRadius( void );
++	INT16 sSNFocusInterruptBonus( void );
++	UINT8 ubRABonusCtHRifles( void );
++	UINT8 ubRABonusCtHShotguns( void );
++	UINT8 ubRAPumpShotgunsAPsReduction( void );
++	UINT8 ubRAFiringSpeedBonusShotguns( void );
++	UINT8 ubRAAimClicksAdded( void );
++	UINT8 ubRAEffectiveRangeBonusShotguns( void );
++	UINT8 ubRAReloadSpeedShotgunsManual( void );
++	UINT8 ubGSFiringSpeedBonusPistols( void );
++	UINT8 ubGSEffectiveRangeBonusPistols( void );
++	UINT8 ubGSBonusCtHPistols( void );
++	UINT8 ubGSBonusCtHMachinePistols( void );
++	UINT8 ubGSCtHMPExcludeAuto( void );
++	UINT8 ubGSAimingBonusPerClick( void );
++	UINT8 ubGSPercentReadyPistolsReduction( void );
++	UINT8 ubGSRealoadSpeedHandgunsBonus( void );
++	UINT8 ubGSAimClicksAdded( void );
++	UINT8 ubMAPunchAPsReduction( void );
++	UINT8 ubMABonusCtHBareHands( void );
++	UINT8 ubMABonusCtHBrassKnuckles( void );
++	UINT8 ubMABonusDamageHandToHand( void );
++	UINT8 ubMABonusBreathDamageHandToHand( void );
++	UINT16 usMALostBreathRegainPenalty( void );
++	UINT16 usMAAimedPunchDamageBonus( void );
++	INT8 bMAAimedPunchCtHModifier( void );
++	UINT8 ubMAChanceToDodgeHtH( void );
++	UINT8 ubMAOnTopCTDHtHBareHanded( void );
++	UINT8 ubMAOnTopCTDHtHBrassKnuckles( void );
++	UINT8 ubMAChanceToDodgeMelee( void );
++	UINT8 ubMAReducedAPsToSteal( void );
++	UINT8 ubMAAPsChangeStanceReduction( void );
++	UINT8 ubMAApsTurnAroundReduction( void );
++	UINT8 ubMAAPsClimbOrJumpReduction( void );
++	UINT8 ubMAReducedAPsRegisteredWhenMoving( void );
++	UINT8 ubMAChanceToCkickDoors( void );
++	BOOLEAN fPermitExtraAnimationsOnlyToMA( void );
++	UINT16 usSLRadiusNormal( void );
++	UINT16 usSLRadiusExtendedEar( void );
++	UINT8 ubSLMaxBonuses( void );
++	UINT8 ubSLBonusAPsPercent( void );
++	UINT8 ubSLEffectiveLevelInRadius( void );
++	UINT8 ubSLEffectiveLevelAsStandby( void );
++	UINT8 ubSLCollectiveInterruptsBonus( void );
++	UINT8 ubSLOverallSuppresionBonusPercent( void );
++	UINT8 ubSLMoraleGainBonus( void );
++	UINT8 ubSLMoraleLossReduction( void );
++	UINT8 ubSLFearResistance( void );
++	UINT8 ubSLDeathMoralelossMultiplier( void );
++	UINT16 usTERepairSpeedBonus( void );
++	UINT16 usTELockpickingBonus( void );
++	UINT16 usTEDisarmElTrapBonus( void );
++	UINT16 usTEAttachingItemsBonus( void );
++	UINT8 ubTEUnjamGunBonus( void );
++	UINT8 ubTERepairElectronicsPenaltyReduction( void );
++	UINT8 ubTEChanceToDetectTrapsBonus( void );
++	UINT8 ubTECtHControlledRobotBonus( void );
++	UINT8 ubTETraitsNumToRepairRobot( void );
++	UINT8 ubTERepairRobotPenaltyReduction( void );
++	BOOLEAN fTETraitsCanRestoreItemThreshold( void );
++	UINT8 ubDONumberTraitsNeededForSurgery( void );
++	UINT8 ubDOSurgeryHealPercentBase( void );
++	UINT8 ubDOSurgeryHealPercentOnTop( void );
++	UINT8 ubDOSurgeryHealPercentBloodbag( void );
++	UINT16 usDOSurgeryMedBagConsumption( void );
++	UINT16 usDOSurgeryMaxBreathLoss( void );
++	UINT16 usDORepairStatsRateBasic( void );
++	UINT16 usDORepairStatsRateOnTop( void );
++	UINT8 ubDORepStPenaltyIfAlsoHealing( void );
++	UINT8 ubDOHealingPenaltyIfAlsoStatRepair( void );
++	BOOLEAN fDORepStShouldThrowMessage( void );
++	UINT16 usDODoctorAssignmentBonus( void );
++	UINT8 ubDOBandagingSpeedPercent( void );
++	UINT8 ubDONaturalRegenBonus( void );
++	UINT8 ubDOMaxRegenBonuses( void );
++	UINT8 ubAMPenaltyDoubleReduction( void );
++	UINT8 ubAMReloadSpeedMagazines( void );
++	UINT8 ubAMReloadSpeedLoose( void );
++	UINT8 ubAMPickItemsAPsReduction( void );
++	UINT8 ubAMWorkBackpackAPsReduction( void );
++	UINT8 ubAMHandleDoorsAPsReduction( void );
++	UINT8 ubAMHandleBombsAPsReduction( void );
++	UINT8 ubAMAttachingItemsAPsReduction( void );
++	UINT8 ubMEBladesAPsReduction( void );
++	UINT8 ubMECtHBladesBonus( void );
++	UINT8 ubMECtHBluntBonus( void );
++	UINT8 ubMEDamageBonusBlades( void );
++	UINT8 ubMEDamageBonusBlunt( void );
++	UINT16 usMEAimedMeleeAttackDamageBonus( void );
++	UINT8 ubMEDodgeBladesBonus( void );
++	UINT8 ubMECtDBladesOnTopWithBladeInHands( void );
++	UINT8 ubMEDodgeBluntBonus( void );
++	UINT8 ubMECtDBluntOnTopWithBladeInHands( void );
++	UINT8 ubTHBladesAPsReduction( void );
++	UINT8 ubTHBladesMaxRange( void );
++	UINT8 ubTHBladesCtHBonus( void );
++	UINT8 ubTHBladesCtHBonusPerClick( void );
++	UINT8 ubTHBladesDamageBonus( void );
++	UINT8 ubTHBladesDamageBonusPerClick( void );
++	UINT8 ubTHBladesSilentCriticalHitChance( void );
++	UINT8 ubTHBladesCriticalHitMultiplierBonus( void );
++	UINT8 ubTHBladesAimClicksAdded( void );
++	UINT8 ubNOeSightRangeBonusInDark( void );
++	UINT8 ubNOHearingRangeBonus( void );
++	UINT8 ubNOHearingRangeBonusInDark( void );
++	UINT8 ubNOIterruptsBonusInDark( void );
++	UINT8 ubNONeedForSleepReduction( void );
++	UINT8 ubSTStealthModeSpeedBonus( void );
++	UINT8 ubSTBonusToMoveQuietly( void );
++	UINT8 ubSTStealthBonus( void );
++	UINT8 ubSTReducedAPsRegistered( void );
++	UINT8 ubSTStealthPenaltyForMovingReduction( void );
++	UINT8 ubATAPsMovementReduction( void );
++	UINT8 ubATBPsMovementReduction( void );
++	UINT8 ubBBDamageResistance( void );
++	UINT8 ubBBCarryWeightBonus( void );
++	UINT8 ubBBBreathLossForHtHImpactReduction( void );
++	UINT16 usBBIncreasedNeededDamageToFallDown( void );
++	UINT8 ubDEAPsNeededToThrowGrenadesReduction( void );
++	UINT8 ubDEMaxRangeToThrowGrenades( void );
++	UINT8 ubDECtHWhenThrowingGrenades( void );
++	UINT8 ubDEDamageOfBombsAndMines( void );
++	UINT8 ubDEAttachDetonatorCheckBonus( void );
++	UINT8 ubDEPlantAndRemoveBombCheckBonus( void );
++	UINT8 ubDEPlacedBombLevelBonus( void );
++	UINT8 ubDEShapedChargeDamageMultiplier( void );
++	UINT8 ubTGBonusToTrainMilitia( void );
++	UINT8 ubTGEffectiveLDRToTrainMilitia( void );
++	UINT8 ubTGBonusToTeachOtherMercs( void );
++	UINT8 ubTGEffectiveSkillValueForTeaching( void );
++	UINT8 ubTGBonusOnPractising( void );
++	UINT8 ubSCSightRangebonusWithScopes( void );
++	UINT16 usSCSightRangebonusWithBinoculars( void );
++	UINT8 ubSCTunnelVisionReducedWithBinoculars( void );
++	BOOLEAN fSCCanDetectEnemyPresenseAround( void );
++	BOOLEAN fSCCanDetermineEnemyNumbersAround( void );
++	BOOLEAN fSCDetectionInDiagonalSectors( void );
++	BOOLEAN fSCPreventsTheEnemyToAmbushMercs( void );
++	BOOLEAN fSCPreventsBloodcatsAmbushes( void );
++	BOOLEAN fSCThrowMessageIfAmbushPrevented( void );
++	INT16 sCOMeleeCTHBonus( void );
++	INT16 sCoMeleeInstakillBonus( void );
++	INT16 sCODisguiseAPReduction( void );
++	INT16 sCOCloseDetectionRange( void );
++	INT16 sCOCloseDetectionRangeSoldierCorpse( void );
++	UINT16 usCOEliteUncoverRadius( void );
++	BOOLEAN fCODetectIfBleeding( void );
++	BOOLEAN fCOStripIfUncovered( void );
++	BOOLEAN fROAllowArtillery( void );
++	BOOLEAN fROArtilleryDistributedOverTurns( void );
++	UINT8 ubSNTBaseChance( void );
++	BOOLEAN fSNTMercOpinionAboutSnitchBonusModifier( void );
++	BOOLEAN fSNTSnitchOpinionAboutMercBonusModifier( void );
++	BOOLEAN fSNTSnitchLeadershipBonusModifer( void );
++	INT8 bSNTSociableMercBonus( void );
++	INT8 bSNTLonerMercBonus( void );
++	INT8 bSNTSameAssignmentBonus( void );
++	INT8 bSNTMercOpinionAboutMercTreshold( void );
++	UINT8 ubSNTPassiveReputationGain( void );
++	UINT8 ubSNTHearingRangeBonus( void );
++	BOOLEAN fSNTPrisonSnitchInterrogationMultiplier( void );
++	BOOLEAN fSNTPrisonSnitchGuardStrengthMultiplier( void );
++	UINT8 ubSVGroupTimeSpentForTravellingFoot( void );
++	UINT8 ubSVGroupTimeSpentForTravellingVehicle( void );
++	UINT8 ubSVMaxBonusesToTravelSpeed( void );
++	UINT8 ubSVBreathForTravellingReduction( void );
++	FLOAT dSVWeatherPenaltiesReduction( void );
++	UINT8 ubSVCamoWornountSpeedReduction( void );
++	UINT16 usSVTrackerMaxRange( void );
++	UINT16 usSVTrackerAbility( void );
++	UINT16 usSVDiseaseResistance( void );
++	INT16 sSVFoodConsumption( void );
++	INT16 sSVDrinkConsumption( void );
++	UINT16 usSVSnakeDefense( void );
++
++	INT8 StealthLevels();
++	INT8 HearingBonus();
++	INT8 ExtraHearingBonus();
++
++// TODO can't make this private yet, would need to remove magic HAS_SKILL_TRAIT and NUM_SKILL_TRAITS first
++	INT8 SoldierNTraitLevel( NTrait trait );
++	INT8 SoldierOTraitLevel( OTrait trait );
++
++private:
++	SOLDIERTYPE* pSoldier; // extension methods base object
++};
++
++class ProfileTraits {
++public:
++	ProfileTraits( MERCPROFILESTRUCT* pProfile );
++
++	void FillHelpText( CHAR16 sString[] );
++
++	INT8 ProfileNTraitLevel( NTrait trait );
++	INT8 ProfileOTraitLevel( OTrait trait );
++
++private:
++	MERCPROFILESTRUCT* pProfile; // extension methods base object
++};
++
++BOOLEAN HasMajorNTrait( NTrait trait );
++BOOLEAN HasMajorOTrait( OTrait trait );
++
++BOOLEAN TwoStagedOldImpTrait( UINT8 uiImpSkillTraitNumber );
++
++// TODO get rid of magic methods that can't leverage from compiler static analysis
++// TODO get rid of trait based checking!
++// instead of checking a trait, a stat should be checked
++// => dont check if there is a docter, check is there is someone with bandaging skills
++BOOLEAN HAS_SKILL_TRAIT( SOLDIERTYPE* pSoldier, UINT8 uiSkillTraitNumber );
++INT8 NUM_SKILL_TRAITS( SOLDIERTYPE* pSoldier, UINT8 uiSkillTraitNumber );
++
++
++#endif
+\ No newline at end of file
+diff --git Tactical/opplist.cpp Tactical/opplist.cpp
+index a7436893..0905b633 100644
+--- Tactical/opplist.cpp
++++ Tactical/opplist.cpp
+@@ -1577,20 +1577,7 @@ INT8 DecideHearing( SOLDIERTYPE * pSoldier )
+ 		bHearing++;
+ 	}
+ 
+-	// old/new traits check - SANDRO
+-	if (gGameOptions.fNewTraitSystem)
+-	{
+-		if (HAS_SKILL_TRAIT( pSoldier, NIGHT_OPS_NT ))
+-			bHearing += gSkillTraitValues.ubNOHearingRangeBonus;
+-		if (HAS_SKILL_TRAIT( pSoldier, SNITCH_NT ))
+-			bHearing += gSkillTraitValues.ubSNTHearingRangeBonus;
+-	}
+-	else
+-	{
+-		if (HAS_SKILL_TRAIT( pSoldier, NIGHTOPS_OT ))
+-			bHearing += 1 * NUM_SKILL_TRAITS( pSoldier, NIGHTOPS_OT );
+-	}
+-
++	bHearing += pSoldier->traits.HearingBonus();
+ 	bHearing += pSoldier->GetHearingBonus();
+ 
+ 	// adjust for dark conditions
+@@ -1609,18 +1596,7 @@ INT8 DecideHearing( SOLDIERTYPE * pSoldier )
+ 		case 14:
+ 		case 15:
+ 			bHearing += 3;
+-			// yet another bonus for nighttime
+-			// old/new traits check - SANDRO
+-			if (gGameOptions.fNewTraitSystem)
+-			{
+-				if (HAS_SKILL_TRAIT( pSoldier, NIGHT_OPS_NT ))
+-					bHearing += gSkillTraitValues.ubNOHearingRangeBonusInDark;
+-			}
+-			else
+-			{
+-				if (HAS_SKILL_TRAIT( pSoldier, NIGHTOPS_OT ))
+-					bHearing += 1 * NUM_SKILL_TRAITS( pSoldier, NIGHTOPS_OT );
+-			}
++			bHearing += pSoldier->traits.ExtraHearingBonus();
+ 			break;
+ 		default:
+ 			break;
+diff --git Tactical/soldier profile type.h Tactical/soldier profile type.h
+index 410acc94..8d96f65d 100644
+--- Tactical/soldier profile type.h	
++++ Tactical/soldier profile type.h	
+@@ -105,84 +105,6 @@ inline bool OKToCheckOpinion(int profileNumber) {
+ 	return (profileNumber < NUMBER_OF_OPINIONS);
+ }
+ 
+-// SANDRO - replaced this list to represent the old traits only
+-typedef enum
+-{
+-	NO_SKILLTRAIT_OT = 0,
+-	LOCKPICKING_OT,
+-	HANDTOHAND_OT,
+-	ELECTRONICS_OT,
+-	NIGHTOPS_OT,
+-	THROWING_OT,
+-	TEACHING_OT,
+-	HEAVY_WEAPS_OT,
+-	AUTO_WEAPS_OT,
+-	STEALTHY_OT,
+-	AMBIDEXT_OT,
+-	THIEF_OT,
+-	MARTIALARTS_OT,
+-	KNIFING_OT,
+-	PROF_SNIPER_OT,
+-	CAMOUFLAGED_OT,
+-	// SANDRO - I dared to remove these for it is really useless,
+-	//   with the camo removing/repainting feature you only need the basic camouflage trait anyway
+-	//CAMOUFLAGED_URBAN,
+-	//CAMOUFLAGED_DESERT,
+-	//CAMOUFLAGED_SNOW,
+-	EXPERT,
+-	NUM_SKILLTRAITS_OT
+-} SkillTrait;
+-
+-//////////////////////////////////////////////////////////////////////
+-// SANDRO - the list for new traits
+-typedef enum
+-{
+-	NO_SKILLTRAIT_NT = 0,
+-	// MAJOR TRAITS
+-	AUTO_WEAPONS_NT, // 1
+-	HEAVY_WEAPONS_NT, // 2
+-	SNIPER_NT, // 3
+-	RANGER_NT, // 4
+-	GUNSLINGER_NT, // 5
+-	MARTIAL_ARTS_NT, // 6
+-	SQUADLEADER_NT, // 7
+-	TECHNICIAN_NT, // 8
+-	DOCTOR_NT, // 9
+-	// MINOR TRAITS
+-	AMBIDEXTROUS_NT, // 10
+-	MELEE_NT, // 11
+-	THROWING_NT, // 12
+-	NIGHT_OPS_NT, // 13
+-	STEALTHY_NT, // 14
+-	ATHLETICS_NT, // 15
+-	BODYBUILDING_NT, // 16
+-	DEMOLITIONS_NT, // 17
+-	TEACHING_NT, // 18
+-	SCOUTING_NT, // 19
+-
+-	// Flugente: new traits have to go here, even if they are major traits, as otherwise the existing traits in profiles get mixed up
+-	COVERT_NT, // 20	// a major trait
+-	RADIO_OPERATOR_NT, //21		// a minor trait
+-	SNITCH_NT, //22		// a minor trait 
+-	SURVIVAL_NT, //23	// a minor trait
+-
+-	NUM_SKILLTRAITS_NT
+-} SkillTraitNew;
+-
+-#define NUM_MAJOR_TRAITS 10
+-#define NUM_MINOR_TRAITS 13
+-
+-#define NUM_ORIGINAL_MAJOR_TRAITS 9
+-
+-// Flugente: I've had it with this hardcoding madness. Without this, adding or removing a new trait would crash anything related to a bubblehelp display of traits
+-// always check every use of these enums and every use of the skill-strings if you add a new trait
+-#define NEWTRAIT_MERCSKILL_EXPERTOFFSET	(NUM_MAJOR_TRAITS + NUM_MINOR_TRAITS)
+-#define NEWTRAIT_MERCSKILL_OFFSET_ALL	(NEWTRAIT_MERCSKILL_EXPERTOFFSET + NUM_MAJOR_TRAITS)
+-
+-// Flugente: these aren't really traits, but it is convenient to pretend so
+-#define INTEL	(2 * NEWTRAIT_MERCSKILL_EXPERTOFFSET + 2)
+-#define VARIOUSSKILLS	(INTEL + 1)
+-
+ // SANDRO - new set of character traits
+ typedef enum
+ {
+@@ -982,6 +904,8 @@ public:
+ 	std::vector<int>	bInvStatus;
+ 	std::vector<int>	bInvNumber;
+ 
++	ProfileTraits traits;
++
+ 	// SANDRO - merc records
+ 	STRUCT_Records		records;
+ 
